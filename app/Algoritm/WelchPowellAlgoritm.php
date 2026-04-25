@@ -717,21 +717,21 @@ class WelchPowellAlgorithm
         array $unscheduledItems = []
     ): array {
         $jadwalData = array_map(fn(JadwalItem $item) => [
-            'nama_jadwal' => $item->getNamaLengkap(),
+            'namaJadwal' => $item->getNamaLengkap(),
             'hari' => $item->slot->hari->nama,
-            'jam_mulai' => $item->slot->jamMulai,
-            'jam_selesai' => $item->slot->jamSelesai,
-            'nama_dosen' => $item->mataKuliah->dosen->nama,
+            'jamMulai' => $item->slot->jamMulai,
+            'jamSelesai' => $item->slot->jamSelesai,
+            'namaDosen' => $item->mataKuliah->dosen->nama,
             'semester' => $item->mataKuliah->semester,
             'sks' => $item->mataKuliah->sksTeori + $item->mataKuliah->sksPraktek,
-            'nama_ruangan' => $item->ruangan->nama,
-            'nama_teknisi' => $item->teknisi?->nama,
+            'namaRuangan' => $item->ruangan->nama,
+            'namaTeknisi' => $item->teknisi?->nama,
         ], $jadwal);
 
         // Group by ruangan
         $byRuangan = [];
         foreach ($jadwalData as $d) {
-            $byRuangan[$d['nama_ruangan']][] = $d;
+            $byRuangan[$d['namaRuangan']][] = $d;
         }
         ksort($byRuangan);
         $groupedByRuangan = [];
@@ -740,7 +740,7 @@ class WelchPowellAlgorithm
                 $items,
                 fn($a, $b) =>
                 (self::HARI_ORDER[strtolower($a['hari'])] ?? 99) <=> (self::HARI_ORDER[strtolower($b['hari'])] ?? 99)
-                ?: $a['jam_mulai'] <=> $b['jam_mulai']
+                ?: $a['jamMulai'] <=> $b['jamMulai']
             );
             $groupedByRuangan[] = ['nama' => $ruangan, 'items' => $items];
         }
@@ -760,6 +760,141 @@ class WelchPowellAlgorithm
             (self::HARI_ORDER[strtolower($a['nama'])] ?? 99) <=> (self::HARI_ORDER[strtolower($b['nama'])] ?? 99)
         );
 
+        $dosenPerKode = [];
+        foreach ($daftarMataKuliah as $mk) {
+            $dosenPerKode[$mk->kode][$mk->dosen->id] = true;
+        }
+        $dosenPerKodeCount = [];
+        foreach ($dosenPerKode as $kode => $dosens) {
+            $dosenPerKodeCount[$kode] = max(1, count($dosens));
+        }
+
+        $kelasPerSemesterRaw = [];
+        foreach ($referensiRombel as $mk) {
+            if ($mk->kelas !== '') {
+                $kelasPerSemesterRaw[$mk->semester][strtoupper(trim($mk->kelas))] = true;
+            }
+        }
+        $kelasPerSemesterCount = [];
+        foreach ($kelasPerSemesterRaw as $sem => $kls) {
+            $kelasPerSemesterCount[$sem] = count($kls);
+        }
+
+        $jumlahRombelSemester = function ($semester) use ($kelasPerSemesterCount) {
+            if (($kelasPerSemesterCount[$semester] ?? 0) > 0)
+                return $kelasPerSemesterCount[$semester];
+            $pasangan = ($semester % 2 == 0) ? $semester - 1 : $semester + 1;
+            if (($kelasPerSemesterCount[$pasangan] ?? 0) > 0)
+                return $kelasPerSemesterCount[$pasangan];
+            return 1;
+        };
+
+        $jumlahKelasPerKode = [];
+        $groupedMkByKode = [];
+        foreach ($daftarMataKuliah as $mk) {
+            $groupedMkByKode[$mk->kode][] = $mk;
+        }
+        foreach ($groupedMkByKode as $kode => $mks) {
+            $kelasList = [];
+            foreach ($mks as $mk) {
+                if ($mk->kelas !== '') {
+                    $kelasList[$mk->kelas] = true;
+                }
+            }
+            if (count($kelasList) === 0) {
+                $jumlahKelasPerKode[$kode] = $jumlahRombelSemester($mks[0]->semester);
+            } else {
+                $jumlahKelasPerKode[$kode] = count($kelasList);
+            }
+        }
+
+        $dosenItems = [];
+        foreach ($jadwal as $item) {
+            $dosenItems[$item->mataKuliah->dosen->id]['dosen'] = $item->mataKuliah->dosen;
+            $dosenItems[$item->mataKuliah->dosen->id]['items'][] = $item;
+        }
+
+        $dosenSummary = [];
+        foreach ($dosenItems as $data) {
+            $dosen = $data['dosen'];
+            $items = $data['items'];
+
+            $sksAjarTeori = 0;
+            $sksAjarPraktek = 0;
+            $bebanSksTotal = 0.0;
+
+            $myUniqueMks = [];
+            foreach ($items as $item) {
+                $mkHash = spl_object_id($item->mataKuliah);
+                $myUniqueMks[$mkHash] = $item->mataKuliah;
+            }
+
+            foreach ($myUniqueMks as $mk) {
+                $kode = $mk->kode;
+                $kls = $mk->kelas;
+                $totalDosenSatuMatkul = $dosenPerKodeCount[$kode] ?? 1;
+
+                if ($kls === '') {
+                    $pengali = $jumlahKelasPerKode[$kode] ?? 1;
+                    $sksAjarTeori += $mk->sksTeori * $pengali;
+                    $sksAjarPraktek += $mk->sksPraktek * $pengali;
+
+                    $bebanSksTotal += ($mk->sksTeori * $pengali) / $totalDosenSatuMatkul;
+                    $bebanSksTotal += ($mk->sksPraktek * $pengali) / $totalDosenSatuMatkul;
+                } else {
+                    $sksAjarTeori += $mk->sksTeori;
+                    $sksAjarPraktek += $mk->sksPraktek;
+
+                    $bebanSksTotal += $mk->sksTeori / $totalDosenSatuMatkul;
+                    $bebanSksTotal += $mk->sksPraktek / $totalDosenSatuMatkul;
+                }
+            }
+
+            $dosenSummary[] = [
+                'nama_dosen' => $dosen->nama,
+                'sks_teori' => $sksAjarTeori,
+                'sks_workshop' => $sksAjarPraktek,
+                'sks_ajar' => $sksAjarTeori + $sksAjarPraktek,
+                'beban_sks' => round($bebanSksTotal, 2),
+                'total_sesi' => count($items),
+            ];
+        }
+
+        usort($dosenSummary, fn($a, $b) => strcmp($a['nama_dosen'], $b['nama_dosen']));
+
+        $teknisiItems = [];
+        foreach ($jadwal as $item) {
+            if ($item->teknisi !== null) {
+                $teknisiItems[$item->teknisi->id]['teknisi'] = $item->teknisi;
+                $teknisiItems[$item->teknisi->id]['items'][] = $item;
+            }
+        }
+
+        $teknisiSummary = [];
+        foreach ($teknisiItems as $data) {
+            $teknisi = $data['teknisi'];
+            $items = $data['items'];
+
+            $mkDipegang = [];
+            foreach ($items as $item) {
+                $mkHash = spl_object_id($item->mataKuliah);
+                $mkDipegang[$mkHash] = $item->mataKuliah;
+            }
+
+            $bebanSks = 0;
+            foreach ($mkDipegang as $mk) {
+                $bebanSks += $mk->sksPraktek;
+            }
+
+            $teknisiSummary[] = [
+                'nama_teknisi' => $teknisi->nama,
+                'total_sesi' => count($items),
+                'beban_sks' => $bebanSks,
+            ];
+        }
+
+        usort($teknisiSummary, fn($a, $b) => strcmp($a['nama_teknisi'], $b['nama_teknisi']));
+
         return [
             'title' => $title,
             'is_success' => $isSuccess,
@@ -768,6 +903,8 @@ class WelchPowellAlgorithm
             'semester' => $semester,
             'unscheduled_count' => count($unscheduledItems),
             'unscheduled_items' => $unscheduledItems,
+            'summary' => $isSuccess ? $dosenSummary : [],
+            'teknisi_summary' => $isSuccess ? $teknisiSummary : [],
         ];
     }
 }

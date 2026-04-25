@@ -11,14 +11,13 @@ class Ruangan extends Model
     protected $table = 'ruangan';
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Parse the PostgreSQL native array to a PHP array.
      */
-    protected function casts(): array
+    protected function kegunaanRuangan(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
-        return [
-            'kegunaan_ruangan' => 'array',
-        ];
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn(?string $value) => $value ? explode(',', trim($value, '{}')) : [],
+            set: fn($value) => is_array($value) ? '{' . implode(',', $value) . '}' : $value,
+        );
     }
 }
