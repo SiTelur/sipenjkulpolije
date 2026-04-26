@@ -52,7 +52,7 @@
         <main class="flex-1 p-gutter overflow-y-auto">
             <div class="max-w-[1440px] mx-auto flex flex-col gap-lg">
             <!-- Page Header -->
-            <div class="flex items-end justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                 <div class="flex flex-col gap-xs">
                     <div class="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant mb-2">
                         <span>Data Master</span>
@@ -80,7 +80,8 @@
 
             <!-- Content Toolbar & Table Card -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-[0_4px_20px_rgba(15,23,42,0.04)] overflow-hidden p-4">
-                <table id="hariTable" class="w-full text-left border-collapse min-w-[800px] stripe hover" style="width:100%">
+                <div class="overflow-x-auto">
+                <table id="hariTable" class="w-full text-left border-collapse min-w-[500px] stripe hover" style="width:100%">
                     <thead>
                         <tr class="bg-surface-container-low border-b border-surface-variant">
                             <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Hari</th>
@@ -116,6 +117,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         </main>
 

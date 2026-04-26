@@ -1,5 +1,5 @@
 <x-app-layout>
-    <main class="pt-8 px-10 pb-12">
+    <main class="pt-6 px-4 sm:px-8 lg:px-10 pb-12">
         <!-- Breadcrumbs -->
         <nav class="flex items-center gap-2 text-slate-500 font-body-sm mb-6">
             <span class="hover:text-blue-600 cursor-pointer text-sm">Urusan Akademik</span>

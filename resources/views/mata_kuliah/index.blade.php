@@ -16,7 +16,7 @@
     }">
         <div class="max-w-[1440px] mx-auto flex flex-col gap-lg">
             <!-- Page Header -->
-            <div class="flex items-end justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                 <div class="flex flex-col gap-xs">
                     <div class="flex items-center gap-xs font-body-sm text-body-sm text-on-surface-variant mb-2">
                         <span>Data Master</span>
@@ -25,7 +25,7 @@
                     </div>
                     <h1 class="font-h1 text-h1 text-on-surface">Manajemen Mata Kuliah</h1>
                 </div>
-                <button @click="showAddModal=true" class="bg-secondary text-on-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-colors duration-200 flex items-center gap-xs px-md py-sm rounded-lg font-data-tabular text-data-tabular">
+                <button @click="showAddModal=true" class="w-full sm:w-auto bg-secondary text-on-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-colors duration-200 flex items-center justify-center gap-xs px-md py-sm rounded-lg font-data-tabular text-data-tabular">
                     <span class="material-symbols-outlined">add</span>
                     Tambah Mata Kuliah
                 </button>
@@ -57,7 +57,8 @@
                 
                 <!-- Tab Ganjil -->
                 <div x-show="activeTab === 'ganjil'">
-                    <table id="mkTableGanjil" class="w-full text-left border-collapse min-w-[800px] stripe hover" style="width:100%">
+                    <div class="overflow-x-auto">
+                    <table id="mkTableGanjil" class="w-full text-left border-collapse min-w-[700px] stripe hover" style="width:100%">
                         <thead>
                             <tr class="bg-surface-container-low border-b border-surface-variant">
                                 <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Kode MK</th>
@@ -108,11 +109,13 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
                 <!-- Tab Genap -->
                 <div x-show="activeTab === 'genap'" style="display: none;">
-                    <table id="mkTableGenap" class="w-full text-left border-collapse min-w-[800px] stripe hover" style="width:100%">
+                    <div class="overflow-x-auto">
+                    <table id="mkTableGenap" class="w-full text-left border-collapse min-w-[700px] stripe hover" style="width:100%">
                         <thead>
                             <tr class="bg-surface-container-low border-b border-surface-variant">
                                 <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Kode MK</th>
@@ -163,6 +166,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,8 +1,8 @@
 <x-app-layout>
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900">{{ $jadwal->title }}</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">{{ $jadwal->title }}</h1>
             <p class="text-slate-500 mt-1">Semester: {{ strtoupper($jadwal->semester) }} | Status: 
                 @if($jadwal->is_success)
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Selesai</span>
@@ -11,13 +11,13 @@
                 @endif
             </p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
             <!-- EXCEL EXPORT BUTTON -->
-            <a href="{{ route('jadwal.export', $jadwal->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+            <a href="{{ route('jadwal.export', $jadwal->id) }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
                 <i class="fas fa-file-excel"></i> Export Excel
             </a>
             
-            <a href="{{ route('jadwal.list') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition-colors shadow-sm">
+            <a href="{{ route('jadwal.list') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition-colors shadow-sm">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </div>

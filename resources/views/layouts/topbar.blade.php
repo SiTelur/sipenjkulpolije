@@ -1,7 +1,9 @@
 <header
-    class="bg-white dark:bg-slate-900 font-['Public_Sans'] text-sm antialiased docked full-width border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none sticky top-0 z-40 flex h-16 w-full items-center justify-between px-6">
+    class="bg-white dark:bg-slate-900 font-['Public_Sans'] text-sm antialiased docked full-width border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none sticky top-0 z-40 flex h-16 w-full items-center justify-between px-4 lg:px-6">
     <div class="flex items-center gap-4">
-        <span class="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50">Polije Admin</span>
+        <button @click="sidebarOpen = true" class="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
+            <span class="material-symbols-outlined" data-icon="menu">menu</span>
+        </button>
     </div>
     <div class="flex items-center gap-2">
         <button
@@ -18,10 +20,10 @@
             class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-full active:scale-95 duration-150 mr-2">
             <span class="material-symbols-outlined" data-icon="settings">settings</span>
         </button>
-        <div
-            class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-300 shrink-0 cursor-pointer active:scale-95 duration-150 transition-transform">
+        <a href="{{ route('profile.edit') }}"
+            class="block w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-300 shrink-0 cursor-pointer active:scale-95 duration-150 transition-transform">
             <img alt="User Profile" class="w-full h-full object-cover"
                 src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name ?? 'Admin') }}&background=0D8ABC&color=fff" />
-        </div>
+        </a>
     </div>
 </header>

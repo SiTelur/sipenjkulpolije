@@ -1,12 +1,12 @@
-<aside class="bg-slate-50 dark:bg-slate-950 font-['Public_Sans'] text-sm font-medium docked h-screen w-64 border-r border-slate-200 dark:border-slate-800 flat no shadows transition-all duration-200 ease-in-out fixed left-0 top-0 flex flex-col p-4 gap-2 z-50">
+<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="lg:translate-x-0 bg-slate-50 dark:bg-slate-950 font-['Public_Sans'] text-sm font-medium docked h-screen w-64 border-r border-slate-200 dark:border-slate-800 flat no shadows transition-transform duration-300 ease-in-out fixed left-0 top-0 flex flex-col p-4 gap-2 z-50">
     <!-- Header -->
     <div class="px-3 py-4 mb-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
             <span class="material-symbols-outlined text-blue-600" data-icon="account_balance">account_balance</span>
         </div>
         <div class="flex flex-col">
-            <span class="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight leading-tight">Akademik</span>
-            <span class="text-xs text-slate-500 font-normal">Portal Manajemen</span>
+            <span class="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight leading-tight">Sistem Penjadwalan</span>
+            <span class="text-xs text-slate-500 font-normal">Perkuliahan</span>
         </div>
     </div>
     @php
@@ -26,6 +26,13 @@
             <span class="material-symbols-outlined" data-icon="calendar_month" {!! request()->routeIs('jadwal.list') ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>calendar_month</span>
             <span class="{{ request()->routeIs('jadwal.list') ? 'font-semibold' : '' }}">Jadwal</span>
         </a>
+
+        <!-- Generate Jadwal -->
+        <a class="flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('jadwal.generate') ? $activeClass : $inactiveClass }}" href="{{ route('jadwal.generate') }}">
+            <span class="material-symbols-outlined" data-icon="auto_awesome" {!! request()->routeIs('jadwal.generate') ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>auto_awesome</span>
+            <span class="{{ request()->routeIs('jadwal.generate') ? 'font-semibold' : '' }}">Generate Jadwal</span>
+        </a>
+
 
         <!-- Master Data Group -->
         <div class="px-3 mt-4 mb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">Data Master</div>

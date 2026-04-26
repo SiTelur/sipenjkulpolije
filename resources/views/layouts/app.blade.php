@@ -7,6 +7,8 @@
 
         <title>{{ config('app.name', 'Sistem Penjadwalan Kuliah Polije') }}</title>
 
+        <link rel="icon" href="{{ asset('logo.png') }}">
+
         <!-- Material Symbols -->
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
         <!-- Google Fonts -->
@@ -43,15 +45,20 @@
         <script src="https://cdn.datatables.net/2.0.3/js/dataTables.tailwindcss.js"></script>
     </head>
     <body class="bg-background min-h-screen text-on-surface antialiased font-body-base">
-        <!-- SideNavBar -->
-        @include('layouts.sidebar')
+        <div x-data="{ sidebarOpen: false }">
+            <!-- Mobile Sidebar Overlay -->
+            <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false" class="fixed inset-0 bg-slate-900/50 z-40 lg:hidden"></div>
 
-        <!-- Main Content Canvas -->
-        <div class="ml-64 flex flex-col min-h-screen">
-            <!-- TopNavBar -->
-            @include('layouts.topbar')
-            <!-- Dashboard Canvas -->
-            {{ $slot }}
+            <!-- SideNavBar -->
+            @include('layouts.sidebar')
+
+            <!-- Main Content Canvas -->
+            <div class="lg:ml-64 flex flex-col min-h-screen transition-all duration-300">
+                <!-- TopNavBar -->
+                @include('layouts.topbar')
+                <!-- Dashboard Canvas -->
+                {{ $slot }}
+            </div>
         </div>
 
         @stack('scripts')

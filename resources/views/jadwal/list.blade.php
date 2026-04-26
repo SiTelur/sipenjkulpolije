@@ -1,5 +1,5 @@
 <x-app-layout>
-    <main class="pt-8 px-10 pb-16">
+    <main class="pt-6 px-4 sm:px-8 lg:px-10 pb-16">
             <!-- Breadcrumbs -->
             <div class="flex items-center gap-2 mb-6 text-sm text-slate-500">
                 <span>Urusan Akademik</span>
@@ -8,17 +8,17 @@
             </div>
 
             <!-- Header Section -->
-            <div class="flex justify-between items-end mb-8">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-slate-900 mb-2">Daftar Jadwal Terdaftar</h1>
-                    <p class="text-base text-slate-500">Kelola dan audit semua jadwal akademik yang telah dibuat untuk tahun akademik ini.</p>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Daftar Jadwal Terdaftar</h1>
+                    <p class="text-sm sm:text-base text-slate-500">Kelola dan audit semua jadwal akademik yang telah dibuat untuk tahun akademik ini.</p>
                 </div>
-                <div class="flex gap-3">
-                    <button class="px-4 py-2 border border-slate-200 text-blue-600 font-bold text-xs rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 uppercase tracking-wider">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button class="w-full sm:w-auto px-4 py-2 border border-slate-200 text-blue-600 font-bold text-xs rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 uppercase tracking-wider">
                         <span class="material-symbols-outlined text-sm">download</span>
                         EKSPOR CSV
                     </button>
-                    <button onclick="window.location.href='{{ route('jadwal.generate') }}'" class="px-4 py-2 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 uppercase tracking-wider shadow-sm">
+                    <button onclick="window.location.href='{{ route('jadwal.generate') }}'" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 uppercase tracking-wider shadow-sm">
                         <span class="material-symbols-outlined text-sm">add</span>
                         BUAT JADWAL BARU
                     </button>
