@@ -113,6 +113,9 @@ class MataKuliahSeeder extends Seeder
             ["id" => 346, "created_at" => "2026-03-02 10:20:26", "kode" => "TIF430707", "nama" => "Workshop Mobile Applications", "semester" => 3, "id_pengampu" => 10, "sks_teori" => 0, "sks_praktek" => 4, "is_active" => true, "kelas" => "B"],
             ["id" => 347, "created_at" => "2026-03-02 10:20:26", "kode" => "TIF440707", "nama" => "Workshop Mobile Applications Framework", "semester" => 4, "id_pengampu" => 10, "sks_teori" => 0, "sks_praktek" => 4, "is_active" => true, "kelas" => "B"],
             ["id" => 348, "created_at" => "2026-03-02 10:20:26", "kode" => "TIF440706", "nama" => "Workshop Sistem Informasi Web Framework", "semester" => 4, "id_pengampu" => 5, "sks_teori" => 0, "sks_praktek" => 4, "is_active" => true, "kelas" => "B"],
+            ["id" => 352, "created_at" => "2026-03-02 10:20:26", "kode" => "TIF450705", "nama" => "Workshop Pengolahan Citra dan Vision", "semester" => 5, "id_pengampu" => 2, "sks_teori" => 0, "sks_praktek" => 4, "is_active" => true, "kelas" => "B"],
+            ["id" => 354, "created_at" => "2026-03-02 10:20:26", "kode" => "TIF450706", "nama" => "Workshop Sistem Tertanam", "semester" => 5, "id_pengampu" => 5, "sks_teori" => 0, "sks_praktek" => 4, "is_active" => true, "kelas" => "B"],
+            ["id" => 355, "created_at" => "2026-03-02 10:20:26", "kode" => "TIF450707", "nama" => "Workshop Sistem Cerdas", "semester" => 5, "id_pengampu" => 3, "sks_teori" => 0, "sks_praktek" => 4, "is_active" => true, "kelas" => "A"],
         ];
 
         foreach ($data as $item) {
