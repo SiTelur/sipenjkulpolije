@@ -18,9 +18,10 @@ class MataKuliahController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kode' => 'required|string|max:50|unique:mata_kuliah,kode',
+            'kode' => 'required|string|max:50',
             'nama' => 'required|string|max:255',
             'semester' => 'required|integer|min:1|max:8',
+            'kelas' => 'nullable|alpha|max:2',
             'sks_teori' => 'required|integer|min:0',
             'sks_praktek' => 'required|integer|min:0',
             'id_pengampu' => 'nullable|exists:dosen,id',
@@ -39,9 +40,10 @@ class MataKuliahController extends Controller
         $mataKuliah = MataKuliah::findOrFail($id);
 
         $validated = $request->validate([
-            'kode' => 'required|string|max:50|unique:mata_kuliah,kode,' . $id,
+            'kode' => 'required|string|max:50',
             'nama' => 'required|string|max:255',
             'semester' => 'required|integer|min:1|max:8',
+            'kelas' => 'nullable|alpha|max:2',
             'sks_teori' => 'required|integer|min:0',
             'sks_praktek' => 'required|integer|min:0',
             'id_pengampu' => 'nullable|exists:dosen,id',
