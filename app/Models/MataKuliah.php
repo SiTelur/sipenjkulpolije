@@ -6,10 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['kode', 'nama', 'semester', 'id_pengampu', 'sks_teori', 'sks_praktek', 'is_active', 'kelas'])]
 class MataKuliah extends Model
 {
     protected $table = 'mata_kuliah';
+
+    protected $fillable = [
+        'kode',
+        'nama',
+        'semester',
+        'id_pengampu',
+        'sks_teori',
+        'sks_praktek',
+        'is_active',
+        'kelas'
+    ];
 
     /**
      * Get the attributes that should be cast.

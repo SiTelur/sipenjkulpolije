@@ -3,13 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['nama', 'jam_mulai', 'jam_selesai', 'jam_mulai_istirahat', 'jam_selesai_istirahat'])]
 class Hari extends Model
 {
     protected $table = 'hari';
 
+    protected $fillable = ['nama', 'jam_mulai', 'jam_selesai', 'jam_mulai_istirahat', 'jam_selesai_istirahat'];
     /**
      * Get the attributes that should be cast.
      *

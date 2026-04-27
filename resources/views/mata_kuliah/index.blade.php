@@ -4,7 +4,6 @@
         showEditModal: false,
         showDeleteModal: false,
         selectedMK: null,
-        activeTab: 'ganjil',
         openEditModal(mk) {
             this.selectedMK = mk;
             this.showEditModal = true;
@@ -46,76 +45,21 @@
             </div>
             @endif
 
-            <!-- Tabs -->
-            <div class="flex items-center gap-6 border-b border-surface-variant">
-                <button @click="activeTab = 'ganjil'; setTimeout(() => $('#mkTableGanjil').DataTable().columns.adjust().responsive.recalc(), 50)" :class="activeTab === 'ganjil' ? 'border-b-2 border-primary text-primary font-semibold' : 'text-on-surface-variant hover:text-on-surface'" class="pb-3 px-1 transition-colors text-sm">Semester Ganjil</button>
-                <button @click="activeTab = 'genap'; setTimeout(() => $('#mkTableGenap').DataTable().columns.adjust().responsive.recalc(), 50)" :class="activeTab === 'genap' ? 'border-b-2 border-primary text-primary font-semibold' : 'text-on-surface-variant hover:text-on-surface'" class="pb-3 px-1 transition-colors text-sm">Semester Genap</button>
-            </div>
-
-            <!-- Content Toolbar & Table Card -->
+            <!-- Filter & Table Card -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-[0_4px_20px_rgba(15,23,42,0.04)] overflow-hidden p-4">
                 
-                <!-- Tab Ganjil -->
-                <div x-show="activeTab === 'ganjil'">
-                    <div class="overflow-x-auto">
-                    <table id="mkTableGanjil" class="w-full text-left border-collapse min-w-[700px] stripe hover" style="width:100%">
-                        <thead>
-                            <tr class="bg-surface-container-low border-b border-surface-variant">
-                                <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Kode MK</th>
-                                <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Nama</th>
-                                <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Semester</th>
-                                <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Kelas</th>
-                                <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">SKS (T/P)</th>
-                                <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Dosen Pengampu</th>
-                                <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Status</th>
-                                <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="font-data-tabular text-data-tabular text-on-surface">
-                            @foreach($mataKuliahs->filter(fn($mk) => $mk->semester % 2 !== 0) as $mk)
-                            <tr class="border-b border-surface-variant transition-colors">
-                                <td class="py-sm px-md font-medium">{{ $mk->kode }}</td>
-                                <td class="py-sm px-md">{{ $mk->nama }}</td>
-                                <td class="py-sm px-md text-on-surface-variant">Semester {{ $mk->semester }}</td>
-                                <td class="py-sm px-md text-on-surface-variant">{{ $mk->kelas }}</td>
-                                <td class="py-sm px-md text-on-surface-variant text-center">{{ $mk->sks_teori }} / {{ $mk->sks_praktek }}</td>
-                                <td class="py-sm px-md">
-                                    @if($mk->pengampu)
-                                    <div class="flex items-center gap-xs">
-                                        {{ $mk->pengampu->nama }}
-                                    </div>
-                                    @else
-                                    <span class="text-outline italic">Belum ditentukan</span>
-                                    @endif
-                                </td>
-                                <td class="py-sm px-md">
-                                    @if($mk->is_active)
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed text-[12px] font-medium border border-primary-fixed-dim">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-secondary mr-1.5"></span>
-                                        Aktif
-                                    </span>
-                                    @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant text-[12px] font-medium border border-outline-variant">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-outline mr-1.5"></span>
-                                        Tidak Aktif
-                                    </span>
-                                    @endif
-                                </td>
-                                <td class="py-sm px-md text-right">
-                                    <button @click="openEditModal({{ json_encode($mk) }})" class="text-outline hover:text-secondary p-1 rounded hover:bg-surface-variant transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
-                                    <button @click="openDeleteModal({{ json_encode($mk) }})" class="text-outline hover:text-error p-1 rounded hover:bg-surface-variant transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    </div>
+                <!-- Filter wrapper disembunyikan sementara, akan dipindah oleh DataTables -->
+                <div id="customFilterWrapper" class="hidden items-center gap-2">
+                    <label class="text-sm font-medium text-on-surface whitespace-nowrap">Filter Semester:</label>
+                    <select id="semesterFilter" class="bg-surface border border-outline-variant rounded-md pl-3 pr-8 py-1 text-sm text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all cursor-pointer">
+                        <option value="semua">Semua Semester</option>
+                        <option value="ganjil">Semester Ganjil</option>
+                        <option value="genap">Semester Genap</option>
+                    </select>
                 </div>
 
-                <!-- Tab Genap -->
-                <div x-show="activeTab === 'genap'" style="display: none;">
-                    <div class="overflow-x-auto">
-                    <table id="mkTableGenap" class="w-full text-left border-collapse min-w-[700px] stripe hover" style="width:100%">
+                <div class="overflow-x-auto">
+                    <table id="mkTable" class="w-full text-left border-collapse min-w-[700px] stripe hover" style="width:100%">
                         <thead>
                             <tr class="bg-surface-container-low border-b border-surface-variant">
                                 <th class="font-label-caps text-label-caps text-on-surface-variant py-sm px-md font-semibold">Kode MK</th>
@@ -129,7 +73,7 @@
                             </tr>
                         </thead>
                         <tbody class="font-data-tabular text-data-tabular text-on-surface">
-                            @foreach($mataKuliahs->filter(fn($mk) => $mk->semester % 2 === 0) as $mk)
+                            @foreach($mataKuliahs as $mk)
                             <tr class="border-b border-surface-variant transition-colors">
                                 <td class="py-sm px-md font-medium">{{ $mk->kode }}</td>
                                 <td class="py-sm px-md">{{ $mk->nama }}</td>
@@ -166,7 +110,6 @@
                             @endforeach
                         </tbody>
                     </table>
-                    </div>
                 </div>
             </div>
         </div>
@@ -316,8 +259,31 @@
     @push('scripts')
     <script>
         $(document).ready(function() {
-            var options = {
+            // Fungsi filter kustom untuk DataTables berdasarkan Semester Ganjil / Genap
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                var filter = $('#semesterFilter').val();
+                if (!filter || filter === 'semua') return true;
+                
+                // Index 2 adalah kolom "Semester" (misal: "Semester 1")
+                var semesterText = data[2] || ""; 
+                var match = semesterText.match(/\d+/);
+                
+                if (match) {
+                    var sem = parseInt(match[0], 10);
+                    if (filter === 'ganjil') return sem % 2 !== 0;
+                    if (filter === 'genap') return sem % 2 === 0;
+                }
+                return true;
+            });
+
+            var table = $('#mkTable').DataTable({
                 responsive: true,
+                dom: '<"flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4"<"flex items-center gap-4"l<"#filter-container">>f>rt<"flex flex-col sm:flex-row justify-between items-center gap-4 mt-4"ip>',
+                initComplete: function() {
+                    // Pindahkan dropdown filter kita ke dalam container yang sudah disiapkan di DOM DataTables
+                    $('#customFilterWrapper').detach().appendTo('#filter-container');
+                    $('#customFilterWrapper').removeClass('hidden').addClass('flex');
+                },
                 language: {
                     search: "Cari:",
                     lengthMenu: "Tampilkan _MENU_ data",
@@ -332,9 +298,12 @@
                         previous: "Sebelumnya"
                     }
                 }
-            };
-            $('#mkTableGanjil').DataTable(options);
-            $('#mkTableGenap').DataTable(options);
+            });
+
+            // Update tabel setiap kali dropdown filter berubah
+            $('#semesterFilter').on('change', function() {
+                table.draw();
+            });
         });
     </script>
     @endpush

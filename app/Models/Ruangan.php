@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['nama', 'kegunaan_ruangan'])]
+#[Fillable()]
 class Ruangan extends Model
 {
     protected $table = 'ruangan';
+
+    protected $fillable = ['nama', 'kegunaan_ruangan'];
 
     /**
      * Cast kegunaan_ruangan sebagai JSON array untuk MySQL.

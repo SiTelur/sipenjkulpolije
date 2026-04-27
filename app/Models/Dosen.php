@@ -4,13 +4,13 @@ namespace App\Models;
 
 use App\Enums\DosenType;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nama', 'nidn', 'is_active', 'tipe_dosen'])]
 class Dosen extends Model
 {
     protected $table = 'dosen';
+
+    protected $fillable = ['nama', 'nidn', 'is_active', 'tipe_dosen'];
 
     /**
      * Get the attributes that should be cast.
