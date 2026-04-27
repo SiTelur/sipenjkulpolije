@@ -11,13 +11,10 @@ class Ruangan extends Model
     protected $table = 'ruangan';
 
     /**
-     * Parse the PostgreSQL native array to a PHP array.
+     * Cast kegunaan_ruangan sebagai JSON array untuk MySQL.
+     * Sebelumnya menggunakan PostgreSQL native array format {TEORI,PRAKTIK}.
      */
-    protected function kegunaanRuangan(): \Illuminate\Database\Eloquent\Casts\Attribute
-    {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn(?string $value) => $value ? explode(',', trim($value, '{}')) : [],
-            set: fn($value) => is_array($value) ? '{' . implode(',', $value) . '}' : $value,
-        );
-    }
+    protected $casts = [
+        'kegunaan_ruangan' => 'array',
+    ];
 }

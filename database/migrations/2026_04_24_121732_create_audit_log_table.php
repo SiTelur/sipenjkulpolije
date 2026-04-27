@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('audit_log', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->text('action');
-            $table->timestampTz('changed_at')->nullable();
-            $table->jsonb('data_old')->nullable();
-            $table->jsonb('data_new')->nullable();
-            $table->jsonb('changed_columns')->nullable(); // Using jsonb for _text
+            $table->timestamp('changed_at')->nullable();
+            $table->json('data_old')->nullable();
+            $table->json('data_new')->nullable();
+            $table->json('changed_columns')->nullable();
             $table->text('table_name')->nullable();
             $table->timestamps();
         });

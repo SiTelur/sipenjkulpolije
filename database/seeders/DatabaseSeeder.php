@@ -31,10 +31,6 @@ class DatabaseSeeder extends Seeder
             TeknisiSeeder::class,
         ]);
 
-        // Fix PostgreSQL sequences because we inserted specific IDs in the seeders
-        $tables = ['dosen', 'hari', 'mata_kuliah', 'ruangan', 'teknisi'];
-        foreach ($tables as $table) {
-            \Illuminate\Support\Facades\DB::statement("SELECT setval('{$table}_id_seq', (SELECT COALESCE(MAX(id), 1) FROM {$table}))");
-        }
+        // MySQL AUTO_INCREMENT otomatis melanjutkan dari ID tertinggi, tidak perlu reset sequence seperti PostgreSQL
     }
 }

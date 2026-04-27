@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('jadwal', function (Blueprint $table) {
             $table->id();
             $table->boolean('is_success');
-            $table->jsonb('jadwal')->nullable();
+            $table->json('jadwal')->nullable();
             $table->text('semester');
-            $table->jsonb('jadwal_view')->nullable();
+            $table->json('jadwal_view')->nullable();
             $table->text('title');
             $table->smallInteger('unscheduled_count');
-            $table->jsonb('unscheduled_items');
-            $table->jsonb('summary');
-            $table->jsonb('teknisi_summary')->nullable();
+            $table->json('unscheduled_items');
+            $table->json('summary');
+            $table->json('teknisi_summary')->nullable();
             $table->timestamps();
         });
     }
