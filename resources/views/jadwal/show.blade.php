@@ -98,5 +98,114 @@
             @endforelse
         </div>
     </div>
+    {{-- ─── Summary Dosen ────────────────────────────────────────────── --}}
+    @if(!empty($jadwal->summary))
+    <div class="mt-8">
+        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-user-tie text-blue-600"></i> Ringkasan Beban Dosen
+        </h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-left">
+                            <th class="px-5 py-3 font-semibold text-slate-600 w-8">#</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600">Nama Dosen</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600 text-center">SKS Teori</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600 text-center">SKS Praktikum</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600 text-center">Total SKS Ajar</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600 text-center">Beban SKS</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600 text-center">Total Sesi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach($jadwal->summary as $i => $d)
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 py-3 text-slate-400 text-xs">{{ $i + 1 }}</td>
+                            <td class="px-5 py-3 font-medium text-slate-800">{{ $d['nama_dosen'] }}</td>
+                            <td class="px-5 py-3 text-center">
+                                <span class="inline-flex items-center justify-center px-2 py-0.5 rounded bg-sky-50 text-sky-700 font-semibold text-xs">{{ $d['sks_teori'] }}</span>
+                            </td>
+                            <td class="px-5 py-3 text-center">
+                                <span class="inline-flex items-center justify-center px-2 py-0.5 rounded bg-violet-50 text-violet-700 font-semibold text-xs">{{ $d['sks_workshop'] }}</span>
+                            </td>
+                            <td class="px-5 py-3 text-center">
+                                <span class="inline-flex items-center justify-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-xs">{{ $d['sks_ajar'] }}</span>
+                            </td>
+                            <td class="px-5 py-3 text-center">
+                                @php
+                                    $beban = $d['beban_sks'];
+                                    $bebanClass = $beban >= 16 ? 'bg-red-50 text-red-700' : ($beban >= 12 ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700');
+                                @endphp
+                                <span class="inline-flex items-center justify-center px-2 py-0.5 rounded {{ $bebanClass }} font-bold text-xs">{{ $beban }}</span>
+                            </td>
+                            <td class="px-5 py-3 text-center text-slate-600 font-medium">{{ $d['total_sesi'] }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-50 border-t border-slate-200 font-semibold text-slate-700">
+                            <td colspan="2" class="px-5 py-3 text-xs text-slate-500">Total {{ count($jadwal->summary) }} dosen</td>
+                            <td class="px-5 py-3 text-center text-sky-700">{{ collect($jadwal->summary)->sum('sks_teori') }}</td>
+                            <td class="px-5 py-3 text-center text-violet-700">{{ collect($jadwal->summary)->sum('sks_workshop') }}</td>
+                            <td class="px-5 py-3 text-center text-blue-700">{{ collect($jadwal->summary)->sum('sks_ajar') }}</td>
+                            <td class="px-5 py-3 text-center">{{ number_format(collect($jadwal->summary)->sum('beban_sks'), 2) }}</td>
+                            <td class="px-5 py-3 text-center">{{ collect($jadwal->summary)->sum('total_sesi') }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ─── Summary Teknisi ──────────────────────────────────────────── --}}
+    @if(!empty($jadwal->teknisi_summary))
+    <div class="mt-6 mb-6">
+        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-tools text-amber-600"></i> Ringkasan Beban Teknisi
+        </h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-left">
+                            <th class="px-5 py-3 font-semibold text-slate-600 w-8">#</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600">Nama Teknisi</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600 text-center">Beban SKS Praktikum</th>
+                            <th class="px-5 py-3 font-semibold text-slate-600 text-center">Total Sesi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach($jadwal->teknisi_summary as $i => $t)
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-5 py-3 text-slate-400 text-xs">{{ $i + 1 }}</td>
+                            <td class="px-5 py-3 font-medium text-slate-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">
+                                        {{ strtoupper(substr($t['nama_teknisi'], 0, 1)) }}
+                                    </span>
+                                    {{ $t['nama_teknisi'] }}
+                                </div>
+                            </td>
+                            <td class="px-5 py-3 text-center">
+                                <span class="inline-flex items-center justify-center px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold text-xs">{{ $t['beban_sks'] }}</span>
+                            </td>
+                            <td class="px-5 py-3 text-center text-slate-600 font-medium">{{ $t['total_sesi'] }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-50 border-t border-slate-200 font-semibold text-slate-700">
+                            <td colspan="2" class="px-5 py-3 text-xs text-slate-500">Total {{ count($jadwal->teknisi_summary) }} teknisi</td>
+                            <td class="px-5 py-3 text-center text-amber-700">{{ collect($jadwal->teknisi_summary)->sum('beban_sks') }}</td>
+                            <td class="px-5 py-3 text-center">{{ collect($jadwal->teknisi_summary)->sum('total_sesi') }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 </x-app-layout>
