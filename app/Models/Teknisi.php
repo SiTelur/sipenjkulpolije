@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['nama', 'is_active'])]
+#[Fillable()]
 class Teknisi extends Model
 {
     protected $table = 'teknisi';
 
+    protected $fillable = ['nama', 'is_active'];
     /**
      * Get the attributes that should be cast.
      *

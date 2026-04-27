@@ -3,17 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
-#[Fillable(['id', 'action', 'changed_at', 'table_name', 'changed_columns'])]
 class AuditLog extends Model
 {
     protected $table = 'audit_log';
 
-    public $incrementing = false;
-
     protected $keyType = 'string';
+
+    protected $fillable = ['id', 'action', 'changed_at', 'table_name', 'changed_columns'];
 
     /**
      * Get the attributes that should be cast.
