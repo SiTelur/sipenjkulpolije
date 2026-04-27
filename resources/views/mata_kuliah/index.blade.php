@@ -139,7 +139,7 @@
                             </div>
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-on-surface mb-1">Kelas</label>
-                                <input type="text" name="kelas" class="w-full bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all">
+                                <input type="text" name="kelas" maxlength="2" pattern="[A-Za-z]{1,2}" title="Kelas hanya boleh diisi 1 atau 2 huruf" class="w-full bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all">
                             </div>
                         </div>
                         <div class="flex gap-4">
@@ -200,7 +200,7 @@
                             </div>
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-on-surface mb-1">Kelas</label>
-                                <input type="text" name="kelas" x-model="selectedMK && selectedMK.kelas" class="w-full bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all">
+                                <input type="text" name="kelas" x-model="selectedMK && selectedMK.kelas" maxlength="2" pattern="[A-Za-z]{1,2}" title="Kelas hanya boleh diisi 1 atau 2 huruf" class="w-full bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all">
                             </div>
                         </div>
                         <div class="flex gap-4">

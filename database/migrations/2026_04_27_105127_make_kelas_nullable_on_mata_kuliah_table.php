@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('mata_kuliah', function (Blueprint $table) {
-            $table->string('kelas', 1)->nullable()->change();
+            $table->string('kelas', 2)->nullable()->change();
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('mata_kuliah', function (Blueprint $table) {
-            $table->string('kelas', 1)->nullable(false)->change();
+            $table->string('kelas', 2)->nullable(false)->change();
         });
     }
 };
