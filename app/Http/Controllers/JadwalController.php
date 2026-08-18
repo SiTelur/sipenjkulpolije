@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Algoritm\Hari as HariAlgoritm;
+use App\Algoritm\WelchPowellAlgorithm;
+use App\Exports\JadwalExport;
 use App\Models\Dosen;
 use App\Models\Hari;
 use App\Models\Jadwal;
@@ -10,6 +12,7 @@ use App\Models\MataKuliah;
 use App\Models\Ruangan;
 use App\Models\Teknisi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 class JadwalController extends Controller
@@ -17,6 +20,7 @@ class JadwalController extends Controller
     public function index()
     {
         $jadwals = Jadwal::orderBy('id', 'desc')->paginate(10);
+
         return view('jadwal.list', compact('jadwals'));
     }
 
@@ -31,6 +35,7 @@ class JadwalController extends Controller
     public function show($id)
     {
         $jadwal = Jadwal::findOrFail($id);
+
         return view('jadwal.show', compact('jadwal'));
     }
 
@@ -38,8 +43,10 @@ class JadwalController extends Controller
     {
         $jadwal = Jadwal::findOrFail($id);
 
-        $filename = 'Jadwal-' . str_replace(' ', '-', $jadwal->title) . '-' . date('YmdHis') . '.xlsx';
-        return Excel::download(new \App\Exports\JadwalExport($jadwal), $filename);
+        $safeTitle = Str::slug($jadwal->title) ?: 'export';
+        $filename = 'Jadwal-'.$safeTitle.'-'.date('YmdHis').'.xlsx';
+
+        return Excel::download(new JadwalExport($jadwal), $filename);
     }
 
     public function store(Request $request)
@@ -48,11 +55,10 @@ class JadwalController extends Controller
             'title' => 'required|string',
             'semester' => 'required|in:ganjil,genap',
             'durasi_praktikum' => 'nullable|numeric|min:1|max:8',
-            'override_praktikum' => 'nullable|in:0,1'
+            'override_praktikum' => 'nullable|in:0,1',
         ]);
 
         $semesterList = $request->semester === 'ganjil' ? [1, 3, 5, 7] : [2, 4, 6, 8];
-
 
         $dbHari = Hari::all();
         $hariAlg = [];
@@ -74,10 +80,11 @@ class JadwalController extends Controller
         $dosenMap = [];
         $mkAlg = [];
         foreach ($dbMk as $mk) {
-            if (!$mk->pengampu)
+            if (! $mk->pengampu) {
                 continue;
+            }
 
-            if (!isset($dosenMap[$mk->id_pengampu])) {
+            if (! isset($dosenMap[$mk->id_pengampu])) {
                 $dosenMap[$mk->id_pengampu] = new \App\Algoritm\Dosen(
                     $mk->pengampu->id,
                     $mk->pengampu->nama
@@ -114,7 +121,7 @@ class JadwalController extends Controller
             );
         }
 
-        $alg = new \App\Algoritm\WelchPowellAlgorithm();
+        $alg = new WelchPowellAlgorithm;
 
         $overrideDurasi = ($request->override_praktikum == 1) ? (int) $request->durasi_praktikum : null;
 
@@ -150,7 +157,7 @@ class JadwalController extends Controller
             $unscheduled
         );
 
-        $jadwal = new Jadwal();
+        $jadwal = new Jadwal;
         $jadwal->title = $request->title;
         $jadwal->semester = $request->semester;
         $jadwal->is_success = $isSuccess;
@@ -187,6 +194,7 @@ class JadwalController extends Controller
                         'pengampu' => $mk->pengampu ? $mk->pengampu->nama : '–',
                     ];
                 });
+
                 return response()->json(['data' => $data]);
 
             case 'dosen':
@@ -195,10 +203,10 @@ class JadwalController extends Controller
                     $query->whereHas('mataKuliah', function ($q) use ($semesterList) {
                         $q->where('is_active', true)->whereIn('semester', $semesterList);
                     })->with([
-                                'mataKuliah' => function ($q) use ($semesterList) {
-                                    $q->where('is_active', true)->whereIn('semester', $semesterList);
-                                }
-                            ]);
+                        'mataKuliah' => function ($q) use ($semesterList) {
+                            $q->where('is_active', true)->whereIn('semester', $semesterList);
+                        },
+                    ]);
                 } else {
                     $query->with('mataKuliah');
                 }
@@ -207,43 +215,48 @@ class JadwalController extends Controller
                         'nama' => $d->nama,
                         'nidn' => $d->nidn ?? '–',
                         'tipe' => $d->tipe_dosen ? str_replace('_', ' ', $d->tipe_dosen->value) : '–',
-                        'matkul' => $d->mataKuliah->pluck('nama')->join(', ') ?: '–'
+                        'matkul' => $d->mataKuliah->pluck('nama')->join(', ') ?: '–',
                     ];
                 });
+
                 return response()->json(['data' => $data]);
 
             case 'ruangan':
                 $data = Ruangan::orderBy('nama')->get()->map(function ($r) {
                     $uses = is_array($r->kegunaan_ruangan) ? $r->kegunaan_ruangan : [];
+
                     return [
                         'nama' => $r->nama,
-                        'kegunaan' => count($uses) > 0 ? implode(', ', $uses) : '–'
+                        'kegunaan' => count($uses) > 0 ? implode(', ', $uses) : '–',
                     ];
                 });
+
                 return response()->json(['data' => $data]);
 
             case 'hari':
                 $data = Hari::all()->map(function ($h) {
-                    $mulai = str_pad($h->jam_mulai, 2, '0', STR_PAD_LEFT) . ':00';
-                    $selesai = str_pad($h->jam_selesai, 2, '0', STR_PAD_LEFT) . ':00';
-                    $istM = $h->jam_mulai_istirahat ? str_pad($h->jam_mulai_istirahat, 2, '0', STR_PAD_LEFT) . ':00' : null;
-                    $istS = $h->jam_selesai_istirahat ? str_pad($h->jam_selesai_istirahat, 2, '0', STR_PAD_LEFT) . ':00' : null;
+                    $mulai = str_pad($h->jam_mulai, 2, '0', STR_PAD_LEFT).':00';
+                    $selesai = str_pad($h->jam_selesai, 2, '0', STR_PAD_LEFT).':00';
+                    $istM = $h->jam_mulai_istirahat ? str_pad($h->jam_mulai_istirahat, 2, '0', STR_PAD_LEFT).':00' : null;
+                    $istS = $h->jam_selesai_istirahat ? str_pad($h->jam_selesai_istirahat, 2, '0', STR_PAD_LEFT).':00' : null;
 
                     return [
                         'nama' => $h->nama,
                         'waktu' => "$mulai – $selesai",
-                        'istirahat' => $istM ? "$istM – $istS" : '–'
+                        'istirahat' => $istM ? "$istM – $istS" : '–',
                     ];
                 });
+
                 return response()->json(['data' => $data]);
 
             case 'teknisi':
                 $data = Teknisi::where('is_active', true)->orderBy('nama')->get()->map(function ($t) {
                     return [
                         'nama' => $t->nama,
-                        'status' => 'Aktif'
+                        'status' => 'Aktif',
                     ];
                 });
+
                 return response()->json(['data' => $data]);
         }
 
