@@ -1,9 +1,23 @@
 <x-app-layout>
     <div class="flex-1 flex flex-col h-full w-full" x-data="{
         showEditModal: false,
-        selectedHari: null,
+        selectedHari: {
+            id: null,
+            nama: '',
+            jam_mulai: '',
+            jam_selesai: '',
+            jam_mulai_istirahat: '',
+            jam_selesai_istirahat: ''
+        },
         openEditModal(hari) {
-            this.selectedHari = hari;
+            this.selectedHari = Object.assign({
+                id: null,
+                nama: '',
+                jam_mulai: '',
+                jam_selesai: '',
+                jam_mulai_istirahat: '',
+                jam_selesai_istirahat: ''
+            }, hari);
             this.showEditModal = true;
         },
         validateEditForm(event) {
@@ -136,7 +150,7 @@
                         <div class="grid grid-cols-4 items-center gap-4">
                             <label class="text-sm font-semibold text-on-surface">Hari</label>
                             <div class="col-span-3">
-                                <select name="nama" x-model="selectedHari.nama" required class="w-full bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all pointer-events-none bg-surface-container-low opacity-80" tabindex="-1">
+                                <select name="nama" x-model="selectedHari && selectedHari.nama" required class="w-full bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all pointer-events-none bg-surface-container-low opacity-80" tabindex="-1">
                                     <option value="">-- Pilih Hari --</option>
                                     @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $d)
                                     <option value="{{ $d }}">{{ $d }}</option>
@@ -149,13 +163,13 @@
                         <div class="grid grid-cols-4 items-center gap-4">
                             <label class="text-sm font-semibold text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> Jam Kerja</label>
                             <div class="col-span-3 flex items-center gap-2">
-                                <select name="jam_mulai" x-model="selectedHari.jam_mulai" required class="flex-1 text-sm bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-2 text-on-surface focus:border-secondary focus:ring-1 outline-none">
+                                <select name="jam_mulai" x-model="selectedHari && selectedHari.jam_mulai" required class="flex-1 text-sm bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-2 text-on-surface focus:border-secondary focus:ring-1 outline-none">
                                     @for($i=0; $i<=23; $i++)
                                     <option value="{{ $i }}">{{ sprintf('%02d:00', $i) }}</option>
                                     @endfor
                                 </select>
                                 <span class="text-on-surface-variant font-medium">-</span>
-                                <select name="jam_selesai" x-model="selectedHari.jam_selesai" required class="flex-1 text-sm bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-2 text-on-surface focus:border-secondary focus:ring-1 outline-none">
+                                <select name="jam_selesai" x-model="selectedHari && selectedHari.jam_selesai" required class="flex-1 text-sm bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-2 text-on-surface focus:border-secondary focus:ring-1 outline-none">
                                     @for($i=0; $i<=23; $i++)
                                     <option value="{{ $i }}">{{ sprintf('%02d:00', $i) }}</option>
                                     @endfor
@@ -166,14 +180,14 @@
                         <div class="grid grid-cols-4 items-center gap-4">
                             <label class="text-sm font-semibold text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">coffee</span> Istirahat</label>
                             <div class="col-span-3 flex items-center gap-2">
-                                <select name="jam_mulai_istirahat" x-model="selectedHari.jam_mulai_istirahat" class="flex-1 text-sm bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-2 text-on-surface focus:border-secondary focus:ring-1 outline-none">
+                                <select name="jam_mulai_istirahat" x-model="selectedHari && selectedHari.jam_mulai_istirahat" class="flex-1 text-sm bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-2 text-on-surface focus:border-secondary focus:ring-1 outline-none">
                                     <option value="">- Kosong -</option>
                                     @for($i=0; $i<=23; $i++)
                                     <option value="{{ $i }}">{{ sprintf('%02d:00', $i) }}</option>
                                     @endfor
                                 </select>
                                 <span class="text-on-surface-variant font-medium">-</span>
-                                <select name="jam_selesai_istirahat" x-model="selectedHari.jam_selesai_istirahat" class="flex-1 text-sm bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-2 text-on-surface focus:border-secondary focus:ring-1 outline-none">
+                                <select name="jam_selesai_istirahat" x-model="selectedHari && selectedHari.jam_selesai_istirahat" class="flex-1 text-sm bg-surface-container-lowest border border-outline-variant rounded-md px-2 py-2 text-on-surface focus:border-secondary focus:ring-1 outline-none">
                                     <option value="">- Kosong -</option>
                                     @for($i=0; $i<=23; $i++)
                                     <option value="{{ $i }}">{{ sprintf('%02d:00', $i) }}</option>

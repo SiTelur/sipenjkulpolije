@@ -236,6 +236,31 @@ class WelchPowellAlgorithm
         'minggu' => 7,
     ];
 
+    public static function getKelasArray(?string $kelas): array
+    {
+        $kelas = strtoupper(trim((string) $kelas));
+        if ($kelas === '') {
+            return []; // empty means all classes in the cohort / umum
+        }
+        preg_match_all('/[A-Z0-9]/', $kelas, $matches);
+
+        return ! empty($matches[0]) ? array_unique($matches[0]) : [];
+    }
+
+    public static function isKelasConflict(?string $kelas1, ?string $kelas2): bool
+    {
+        $k1 = self::getKelasArray($kelas1);
+        $k2 = self::getKelasArray($kelas2);
+
+        // If either is empty array, it applies to ALL classes in the semester -> conflict!
+        if (empty($k1) || empty($k2)) {
+            return true;
+        }
+
+        // If there is any overlapping class character (e.g. ['A', 'B'] and ['B']) -> conflict!
+        return ! empty(array_intersect($k1, $k2));
+    }
+
     // ─── Slot Generation ─────────────────────────────────────────────────────
 
     private function generateSlotsForDuration(int $durasi): array
@@ -368,16 +393,7 @@ class WelchPowellAlgorithm
             return false;
         }
 
-        $mk1Umum = $mk1->kelas === '';
-        $mk2Umum = $mk2->kelas === '';
-        if ($mk1Umum || $mk2Umum) {
-            return true;
-        }
-        if ($mk1->kelas !== $mk2->kelas) {
-            return false;
-        }
-
-        return true;
+        return self::isKelasConflict($mk1->kelas, $mk2->kelas);
     }
 
     // ─── Degree Computation ───────────────────────────────────────────────────
@@ -391,12 +407,10 @@ class WelchPowellAlgorithm
                 if ($other === $mk) {
                     continue;
                 }
-                if ($other->dosen->id === $mk->dosen->id) {
-                    $degree += $other->pertemuanPerMinggu;
-                }
+                $hasDosenConflict = ($other->dosen->id === $mk->dosen->id);
+                $hasMahasiswaConflict = ($mk->semester === $other->semester && self::isKelasConflict($mk->kelas, $other->kelas));
 
-                // 2. Semester yang sama -> konflik mahasiswa
-                if ($mk->semester === $other->semester) {
+                if ($hasDosenConflict || $hasMahasiswaConflict) {
                     $degree += $other->pertemuanPerMinggu;
                 }
             }
@@ -429,9 +443,7 @@ class WelchPowellAlgorithm
         $jadwalTerkait = array_filter($jadwalHariIni, function (JadwalItem $item) use ($mk) {
             return $item->mataKuliah->dosen->id === $mk->dosen->id ||
                 ($item->mataKuliah->semester === $mk->semester &&
-                    ($item->mataKuliah->kelas === $mk->kelas ||
-                        $item->mataKuliah->kelas === '' ||
-                        $mk->kelas === ''));
+                    self::isKelasConflict($item->mataKuliah->kelas, $mk->kelas));
         });
         $jadwalTerkait = array_values($jadwalTerkait);
         $terkaitCount = count($jadwalTerkait);
@@ -447,9 +459,24 @@ class WelchPowellAlgorithm
             $prioritas -= 15;
         }
 
+        $firstJam = $slot->hari->jamPelajaran[0] ?? $slot->hari->jamMulai;
+        $istirahatSelesai = ! empty($slot->hari->jamIstirahat)
+            ? (max($slot->hari->jamIstirahat) + 1)
+            : null;
+
         if ($mk->isWorkshop) {
             $totalWorkshop = count(array_filter($jadwalHariIni, fn ($i) => $i->mataKuliah->isWorkshop));
             $prioritas -= $totalWorkshop * 50;
+
+            // Prefer standard blocks for 4-hour workshops (e.g. 07:00-11:00, 08:00-12:00, 13:00-17:00)
+            // Penalize awkward mid-day shifts (like 10:00-14:00 or 11:00-15:00) that fracture the day
+            $isStandardMorning = ($slot->jamMulai === $firstJam && $slot->jamSelesai <= 12);
+            $isStandardAfternoon = ($slot->jamMulai >= 13 && $slot->jamSelesai === ($slot->hari->jamSelesai));
+            if ($isStandardMorning || $isStandardAfternoon) {
+                $prioritas += 40;
+            } else {
+                $prioritas -= 60;
+            }
         } else {
             $theoryOnSameSem = count(array_filter(
                 $jadwalHariIni,
@@ -460,11 +487,6 @@ class WelchPowellAlgorithm
             }
             $prioritas -= count($jadwalHariIni) * 2;
         }
-
-        $firstJam = $slot->hari->jamPelajaran[0] ?? $slot->hari->jamMulai;
-        $istirahatSelesai = ! empty($slot->hari->jamIstirahat)
-            ? (max($slot->hari->jamIstirahat) + 1)
-            : null;
 
         $isAwalHari = $slot->jamMulai === $firstJam;
         $isSetelahIstirahat = $istirahatSelesai !== null && $slot->jamMulai === $istirahatSelesai;
@@ -544,6 +566,9 @@ class WelchPowellAlgorithm
         $ruanganCocok = $this->getRuanganCocok($mk, $daftarRuangan);
 
         foreach ($availableSlots as $slot) {
+            if ($pertemuanKe === 2 && isset($pertemuan1SlotMap[spl_object_id($mk)]) && $pertemuan1SlotMap[spl_object_id($mk)]->hari === $slot->hari) {
+                continue;
+            }
             foreach ($ruanganCocok as $ruangan) {
                 $candidates = $conflictIndex->candidates($mk, $slot, $ruangan);
                 $conflictingItems = [];
@@ -586,6 +611,9 @@ class WelchPowellAlgorithm
                             foreach ($blockerSlots as $bSlot) {
                                 if ($relocatedThis) {
                                     break;
+                                }
+                                if ($blocker->pertemuanKe === 2 && isset($pertemuan1SlotMap[spl_object_id($blocker->mataKuliah)]) && $pertemuan1SlotMap[spl_object_id($blocker->mataKuliah)]->hari === $bSlot->hari) {
+                                    continue;
                                 }
                                 foreach ($blockerRooms as $bRoom) {
                                     $bCandidates = $conflictIndex->candidates($blocker->mataKuliah, $bSlot, $bRoom);
@@ -691,21 +719,20 @@ class WelchPowellAlgorithm
             }
         }
 
-        // Urutan penjadwalan: degree tertinggi dulu (paling banyak konflik),
-        // durasi terpanjang sebagai tiebreaker, lalu MK umum (teori) didahulukan
-        // di antara MK dengan durasi dan degree yang sama.
+        // Urutan penjadwalan: durasi terpanjang (workshop 4j) didahulukan karena slot 4 jam dan lab terbatas,
+        // lalu degree tertinggi (paling banyak konflik), lalu MK umum / gabungan didahulukan
         usort($expandedMK, function (MKDegree $a, MKDegree $b) {
+            // Prioritaskan workshop (durasi 4 jam) karena ruang lab dan slot 4 jam sangat terbatas
+            if ($b->mk->durasiJam !== $a->mk->durasiJam) {
+                return $b->mk->durasiJam <=> $a->mk->durasiJam;
+            }
             // Degree primer: yang paling banyak konflik dijadwalkan lebih dulu
             if ($b->degree !== $a->degree) {
                 return $b->degree <=> $a->degree;
             }
-            // Tiebreak 1: durasi terpanjang (workshop 4j sebelum teori 2j jika degree sama)
-            if ($b->mk->durasiJam !== $a->mk->durasiJam) {
-                return $b->mk->durasiJam <=> $a->mk->durasiJam;
-            }
-            // Tiebreak 2: MK umum (kelas='') didahulukan karena paling terbatas slot-nya
-            $aIsUmum = $a->mk->kelas === '';
-            $bIsUmum = $b->mk->kelas === '';
+            // Tiebreak 2: MK umum / gabungan (kelas='' atau 'AB') didahulukan karena paling terbatas slot-nya
+            $aIsUmum = empty(self::getKelasArray($a->mk->kelas)) || count(self::getKelasArray($a->mk->kelas)) > 1;
+            $bIsUmum = empty(self::getKelasArray($b->mk->kelas)) || count(self::getKelasArray($b->mk->kelas)) > 1;
             if ($aIsUmum !== $bIsUmum) {
                 return $aIsUmum ? -1 : 1;
             }
@@ -756,16 +783,16 @@ class WelchPowellAlgorithm
             );
 
             usort($slotsWithPriority, function (SlotPriority $a, SlotPriority $b) {
+                if ($b->priority !== $a->priority) {
+                    return $b->priority <=> $a->priority;
+                }
                 $hariA = array_search($a->slot->hari->nama, array_column($this->daftarHari, 'nama'));
                 $hariB = array_search($b->slot->hari->nama, array_column($this->daftarHari, 'nama'));
                 if ($hariA !== $hariB) {
                     return $hariA <=> $hariB;
                 }
-                if ($a->slot->jamMulai !== $b->slot->jamMulai) {
-                    return $a->slot->jamMulai <=> $b->slot->jamMulai;
-                }
 
-                return $b->priority <=> $a->priority;
+                return $a->slot->jamMulai <=> $b->slot->jamMulai;
             });
 
             $ruanganCocok = $this->getRuanganCocok($mk, $daftarRuangan);
@@ -1075,8 +1102,9 @@ class WelchPowellAlgorithm
 
         $kelasPerSemesterRaw = [];
         foreach ($referensiRombel as $mk) {
-            if ($mk->kelas !== '') {
-                $kelasPerSemesterRaw[$mk->semester][strtoupper(trim($mk->kelas))] = true;
+            $klsArr = self::getKelasArray($mk->kelas);
+            foreach ($klsArr as $k) {
+                $kelasPerSemesterRaw[$mk->semester][$k] = true;
             }
         }
         $kelasPerSemesterCount = [];
@@ -1104,8 +1132,9 @@ class WelchPowellAlgorithm
         foreach ($groupedMkByKode as $kode => $mks) {
             $kelasList = [];
             foreach ($mks as $mk) {
-                if ($mk->kelas !== '') {
-                    $kelasList[$mk->kelas] = true;
+                $klsArr = self::getKelasArray($mk->kelas);
+                foreach ($klsArr as $k) {
+                    $kelasList[$k] = true;
                 }
             }
             if (count($kelasList) === 0) {
