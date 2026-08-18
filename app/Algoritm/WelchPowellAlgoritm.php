@@ -9,8 +9,7 @@ class Dosen
     public function __construct(
         public int $id,
         public string $nama
-    ) {
-    }
+    ) {}
 }
 
 class Teknisi
@@ -18,14 +17,15 @@ class Teknisi
     public function __construct(
         public int $id,
         public string $nama
-    ) {
-    }
+    ) {}
 }
 
 class MataKuliah
 {
     public bool $isWorkshop;
+
     public int $pertemuanPerMinggu;
+
     public int $durasiJam;
 
     public function __construct(
@@ -51,6 +51,7 @@ class MataKuliah
     public function getNamaLengkap(): string
     {
         $kelasLabel = $this->kelas !== '' ? " {$this->kelas}" : '';
+
         return $this->pertemuanPerMinggu > 1
             ? "{$this->nama}{$kelasLabel}"
             : $this->nama;
@@ -60,12 +61,14 @@ class MataKuliah
 class DurasiConfig
 {
     public static int $jamPerSksTeori = 1;
+
     public static int $jamPerSksPraktik = 2;
 }
 
 class Hari
 {
     public array $jamPelajaran; // list of int hours
+
     public array $jamIstirahat; // range as [start, end) or []
 
     public function __construct(
@@ -85,7 +88,7 @@ class Hari
 
         $pelajaran = [];
         for ($i = $jamMulai; $i < $jamSelesai; $i++) {
-            if (!in_array($i, $istirahat)) {
+            if (! in_array($i, $istirahat)) {
                 $pelajaran[] = $i;
             }
         }
@@ -99,8 +102,7 @@ class Slot
         public Hari $hari,
         public int $jamMulai,
         public int $jamSelesai
-    ) {
-    }
+    ) {}
 
     public function __toString(): string
     {
@@ -113,8 +115,7 @@ class Ruangan
     public function __construct(
         public string $nama,
         public array $supports // ['TEORI', 'PRAKTIK']
-    ) {
-    }
+    ) {}
 }
 
 class JadwalItem
@@ -125,12 +126,12 @@ class JadwalItem
         public Slot $slot,
         public int $pertemuanKe = 1,
         public ?Teknisi $teknisi = null
-    ) {
-    }
+    ) {}
 
     public function getNamaLengkap(): string
     {
         $kelasLabel = $this->mataKuliah->kelas !== '' ? " {$this->mataKuliah->kelas}" : '';
+
         return $this->mataKuliah->pertemuanPerMinggu > 1
             ? "{$this->mataKuliah->nama}{$kelasLabel} (Pertemuan {$this->pertemuanKe})"
             : $this->mataKuliah->nama;
@@ -143,8 +144,7 @@ class MKDegree
         public MataKuliah $mk,
         public int $pertemuan,
         public int $degree
-    ) {
-    }
+    ) {}
 }
 
 class SlotPriority
@@ -152,8 +152,7 @@ class SlotPriority
     public function __construct(
         public Slot $slot,
         public int $priority
-    ) {
-    }
+    ) {}
 }
 
 // ─── Conflict Index ───────────────────────────────────────────────────────────
@@ -161,9 +160,13 @@ class SlotPriority
 class ConflictIndex
 {
     public array $byHari = [];
+
     public array $byDosen = [];
+
     public array $byRuangan = [];
+
     public array $bySemester = [];
+
     public array $byTeknisi = [];
 
     public function add(JadwalItem $item): void
@@ -180,14 +183,19 @@ class ConflictIndex
     public function candidates(MataKuliah $mk, Slot $slot, Ruangan $ruangan): array
     {
         $result = [];
-        foreach ($this->byHari[$slot->hari->nama] ?? [] as $i)
+        foreach ($this->byHari[$slot->hari->nama] ?? [] as $i) {
             $result[spl_object_id($i)] = $i;
-        foreach ($this->byDosen[$mk->dosen->id] ?? [] as $i)
+        }
+        foreach ($this->byDosen[$mk->dosen->id] ?? [] as $i) {
             $result[spl_object_id($i)] = $i;
-        foreach ($this->byRuangan[$ruangan->nama] ?? [] as $i)
+        }
+        foreach ($this->byRuangan[$ruangan->nama] ?? [] as $i) {
             $result[spl_object_id($i)] = $i;
-        foreach ($this->bySemester[$mk->semester] ?? [] as $i)
+        }
+        foreach ($this->bySemester[$mk->semester] ?? [] as $i) {
             $result[spl_object_id($i)] = $i;
+        }
+
         return array_values($result);
     }
 
@@ -204,7 +212,7 @@ class ConflictIndex
 
     private function removeItem(array $list, JadwalItem $target): array
     {
-        return array_values(array_filter($list, fn($i) => $i !== $target));
+        return array_values(array_filter($list, fn ($i) => $i !== $target));
     }
 }
 
@@ -213,7 +221,9 @@ class ConflictIndex
 class WelchPowellAlgorithm
 {
     private array $daftarHari = [];
+
     private array $daftarMataKuliah = [];
+
     private array $slotCache = [];
 
     private const HARI_ORDER = [
@@ -230,17 +240,20 @@ class WelchPowellAlgorithm
 
     private function generateSlotsForDuration(int $durasi): array
     {
-        if ($durasi <= 0)
+        if ($durasi <= 0) {
             return [];
-        if (isset($this->slotCache[$durasi]))
+        }
+        if (isset($this->slotCache[$durasi])) {
             return $this->slotCache[$durasi];
+        }
 
         $slots = [];
         foreach ($this->daftarHari as $hari) {
             $jamList = $hari->jamPelajaran;
             $len = count($jamList);
-            if ($len < $durasi)
+            if ($len < $durasi) {
                 continue;
+            }
 
             for ($i = 0; $i <= $len - $durasi; $i++) {
                 $window = array_slice($jamList, $i, $durasi);
@@ -258,6 +271,7 @@ class WelchPowellAlgorithm
         }
 
         $this->slotCache[$durasi] = $slots;
+
         return $slots;
     }
 
@@ -265,8 +279,10 @@ class WelchPowellAlgorithm
 
     private function isTimeOverlap(Slot $s1, Slot $s2): bool
     {
-        if ($s1->hari !== $s2->hari)
+        if ($s1->hari !== $s2->hari) {
             return false;
+        }
+
         return $s1->jamMulai < $s2->jamSelesai && $s2->jamMulai < $s1->jamSelesai;
     }
 
@@ -280,9 +296,11 @@ class WelchPowellAlgorithm
                     break;
                 }
             }
-            if (!$sibuk)
+            if (! $sibuk) {
                 return $teknisi;
+            }
         }
+
         return null;
     }
 
@@ -304,18 +322,25 @@ class WelchPowellAlgorithm
     private function ruanganScore(Ruangan $r, MataKuliah $mk): int
     {
         if ($mk->sksPraktek > 1) {
-            if (stripos($r->nama, 'Lab') !== false)
+            if (stripos($r->nama, 'Lab') !== false) {
                 return 4;
-            if ($r->supports === ['PRAKTIK'])
+            }
+            if ($r->supports === ['PRAKTIK']) {
                 return 3;
-            if (in_array('PRAKTIK', $r->supports))
+            }
+            if (in_array('PRAKTIK', $r->supports)) {
                 return 2;
+            }
+
             return 1;
         }
-        if ($r->supports === ['TEORI'])
+        if ($r->supports === ['TEORI']) {
             return 3;
-        if (count($r->supports) === 2)
+        }
+        if (count($r->supports) === 2) {
             return 2;
+        }
+
         return 1;
     }
 
@@ -327,23 +352,31 @@ class WelchPowellAlgorithm
         Ruangan $r1,
         Ruangan $r2
     ): bool {
-        if ($mk1 === $mk2 && $slot1->hari === $slot2->hari)
+        if ($mk1 === $mk2 && $slot1->hari === $slot2->hari) {
             return true;
-        if (!$this->isTimeOverlap($slot1, $slot2))
+        }
+        if (! $this->isTimeOverlap($slot1, $slot2)) {
             return false;
-        if ($mk1->dosen->id === $mk2->dosen->id)
+        }
+        if ($mk1->dosen->id === $mk2->dosen->id) {
             return true;
-        if ($r1->nama === $r2->nama)
+        }
+        if ($r1->nama === $r2->nama) {
             return true;
-        if ($mk1->semester !== $mk2->semester)
+        }
+        if ($mk1->semester !== $mk2->semester) {
             return false;
+        }
 
         $mk1Umum = $mk1->kelas === '';
         $mk2Umum = $mk2->kelas === '';
-        if ($mk1Umum || $mk2Umum)
+        if ($mk1Umum || $mk2Umum) {
             return true;
-        if ($mk1->kelas !== $mk2->kelas)
+        }
+        if ($mk1->kelas !== $mk2->kelas) {
             return false;
+        }
+
         return true;
     }
 
@@ -355,22 +388,21 @@ class WelchPowellAlgorithm
         foreach ($daftarMK as $mk) {
             $degree = 0;
             foreach ($daftarMK as $other) {
-                if ($other === $mk)
+                if ($other === $mk) {
                     continue;
+                }
                 if ($other->dosen->id === $mk->dosen->id) {
-                    $degree += 3 * $other->pertemuanPerMinggu;
-                    continue;
+                    $degree += $other->pertemuanPerMinggu;
                 }
-                if ($mk->isWorkshop && $other->isWorkshop) {
-                    $degree += 1 * $other->pertemuanPerMinggu;
-                    continue;
-                }
+
+                // 2. Semester yang sama -> konflik mahasiswa
                 if ($mk->semester === $other->semester) {
                     $degree += $other->pertemuanPerMinggu;
                 }
             }
             $degrees[spl_object_id($mk)] = $degree;
         }
+
         return $degrees;
     }
 
@@ -387,10 +419,11 @@ class WelchPowellAlgorithm
         $jadwalHariIni = $jadwalPerHari[$slot->hari->nama] ?? [];
 
         if ($pertemuanKe === 2 && $pertemuan1Slot !== null) {
-            if ($pertemuan1Slot->hari === $slot->hari)
+            if ($pertemuan1Slot->hari === $slot->hari) {
                 $prioritas -= 50;
-            else
+            } else {
                 $prioritas += 10;
+            }
         }
 
         $jadwalTerkait = array_filter($jadwalHariIni, function (JadwalItem $item) use ($mk) {
@@ -405,37 +438,46 @@ class WelchPowellAlgorithm
 
         if ($terkaitCount > 0) {
             $prioritas += 20;
-            if ($terkaitCount >= 3)
+            if ($terkaitCount >= 3) {
                 $prioritas -= ($terkaitCount - 2) * 20;
-            else
+            } else {
                 $prioritas -= $terkaitCount * 5;
+            }
         } else {
             $prioritas -= 15;
         }
 
         if ($mk->isWorkshop) {
-            $totalWorkshop = count(array_filter($jadwalHariIni, fn($i) => $i->mataKuliah->isWorkshop));
+            $totalWorkshop = count(array_filter($jadwalHariIni, fn ($i) => $i->mataKuliah->isWorkshop));
             $prioritas -= $totalWorkshop * 50;
         } else {
+            $theoryOnSameSem = count(array_filter(
+                $jadwalHariIni,
+                fn ($i) => ! $i->mataKuliah->isWorkshop && $i->mataKuliah->semester === $mk->semester
+            ));
+            if ($theoryOnSameSem >= 2) {
+                $prioritas -= $theoryOnSameSem * 40;
+            }
             $prioritas -= count($jadwalHariIni) * 2;
         }
 
         $firstJam = $slot->hari->jamPelajaran[0] ?? $slot->hari->jamMulai;
-        $istirahatSelesai = !empty($slot->hari->jamIstirahat)
+        $istirahatSelesai = ! empty($slot->hari->jamIstirahat)
             ? (max($slot->hari->jamIstirahat) + 1)
             : null;
 
         $isAwalHari = $slot->jamMulai === $firstJam;
         $isSetelahIstirahat = $istirahatSelesai !== null && $slot->jamMulai === $istirahatSelesai;
-        if ($isAwalHari || $isSetelahIstirahat)
+        if ($isAwalHari || $isSetelahIstirahat) {
             $prioritas += 10;
+        }
 
         foreach ($jadwalTerkait as $existing) {
             $isNempel = $existing->slot->jamSelesai === $slot->jamMulai
                 || $slot->jamSelesai === $existing->slot->jamMulai;
 
             $isNempelIstirahat = false;
-            if (!empty($slot->hari->jamIstirahat)) {
+            if (! empty($slot->hari->jamIstirahat)) {
                 $brFirst = min($slot->hari->jamIstirahat);
                 $brLast = max($slot->hari->jamIstirahat) + 1;
                 $isNempelIstirahat =
@@ -443,16 +485,17 @@ class WelchPowellAlgorithm
                     ($slot->jamSelesai === $brFirst && $existing->slot->jamMulai === $brLast);
             }
 
-            if ($isNempel || $isNempelIstirahat)
+            if ($isNempel || $isNempelIstirahat) {
                 $prioritas += 35;
+            }
         }
 
         $allStarts = array_map(
-            fn($i) => [$i->slot->jamMulai, $i->slot->jamSelesai],
+            fn ($i) => [$i->slot->jamMulai, $i->slot->jamSelesai],
             $jadwalTerkait
         );
         $allStarts[] = [$slot->jamMulai, $slot->jamSelesai];
-        usort($allStarts, fn($a, $b) => $a[0] <=> $b[0]);
+        usort($allStarts, fn ($a, $b) => $a[0] <=> $b[0]);
 
         $gapPenalty = 0;
         for ($i = 0; $i < count($allStarts) - 1; $i++) {
@@ -460,7 +503,7 @@ class WelchPowellAlgorithm
             $start = $allStarts[$i + 1][0];
             if ($start > $end) {
                 $brInGap = 0;
-                if (!empty($slot->hari->jamIstirahat)) {
+                if (! empty($slot->hari->jamIstirahat)) {
                     $brFirst = min($slot->hari->jamIstirahat);
                     $brLast = max($slot->hari->jamIstirahat) + 1;
                     $brInGap = max(0, min($start, $brLast) - max($end, $brFirst));
@@ -471,15 +514,158 @@ class WelchPowellAlgorithm
         $prioritas -= $gapPenalty;
 
         if ($terkaitCount > 0) {
-            $minStart = min($slot->jamMulai, min(array_map(fn($i) => $i->slot->jamMulai, $jadwalTerkait)));
-            $maxEnd = max($slot->jamSelesai, max(array_map(fn($i) => $i->slot->jamSelesai, $jadwalTerkait)));
+            $minStart = min($slot->jamMulai, min(array_map(fn ($i) => $i->slot->jamMulai, $jadwalTerkait)));
+            $maxEnd = max($slot->jamSelesai, max(array_map(fn ($i) => $i->slot->jamSelesai, $jadwalTerkait)));
             $usedTime = ($slot->jamSelesai - $slot->jamMulai) +
-                array_sum(array_map(fn($i) => $i->slot->jamSelesai - $i->slot->jamMulai, $jadwalTerkait));
+                array_sum(array_map(fn ($i) => $i->slot->jamSelesai - $i->slot->jamMulai, $jadwalTerkait));
             $span = max(1, $maxEnd - $minStart);
-            $prioritas += intdiv($usedTime * 100 / $span, 8);
+            $prioritas += (int) (($usedTime * 100 / $span) / 8);
         }
 
         return $prioritas;
+    }
+
+    private function tryDisplacementRescue(
+        MKDegree $mkDegree,
+        array &$jadwal,
+        ConflictIndex $conflictIndex,
+        array &$jadwalPerHari,
+        array &$pertemuan1SlotMap,
+        array $daftarRuangan,
+        array $daftarTeknisi,
+        ?int $overrideDurasiWorkshop
+    ): bool {
+        [$mk, $pertemuanKe] = [$mkDegree->mk, $mkDegree->pertemuan];
+        $durasi = ($mk->isWorkshop && $overrideDurasiWorkshop !== null)
+            ? $overrideDurasiWorkshop
+            : $mk->durasiJam;
+
+        $availableSlots = $this->generateSlotsForDuration($durasi);
+        $ruanganCocok = $this->getRuanganCocok($mk, $daftarRuangan);
+
+        foreach ($availableSlots as $slot) {
+            foreach ($ruanganCocok as $ruangan) {
+                $candidates = $conflictIndex->candidates($mk, $slot, $ruangan);
+                $conflictingItems = [];
+                foreach ($candidates as $existing) {
+                    if ($this->isConflict($mk, $existing->mataKuliah, $slot, $existing->slot, $ruangan, $existing->ruangan)) {
+                        $conflictingItems[] = $existing;
+                    }
+                }
+
+                if (count($conflictingItems) >= 1 && count($conflictingItems) <= 3) {
+                    foreach ($conflictingItems as $b) {
+                        $conflictIndex->remove($b);
+                        $jadwalPerHari[$b->slot->hari->nama] = array_values(array_filter(
+                            $jadwalPerHari[$b->slot->hari->nama] ?? [],
+                            fn ($i) => $i !== $b
+                        ));
+                    }
+
+                    $reCandidates = $conflictIndex->candidates($mk, $slot, $ruangan);
+                    $stillConflict = false;
+                    foreach ($reCandidates as $ex) {
+                        if ($this->isConflict($mk, $ex->mataKuliah, $slot, $ex->slot, $ruangan, $ex->ruangan)) {
+                            $stillConflict = true;
+                            break;
+                        }
+                    }
+
+                    if (! $stillConflict) {
+                        $allRelocated = true;
+                        $newBlockers = [];
+
+                        foreach ($conflictingItems as $blocker) {
+                            $blockerDurasi = ($blocker->mataKuliah->isWorkshop && $overrideDurasiWorkshop !== null)
+                                ? $overrideDurasiWorkshop
+                                : $blocker->mataKuliah->durasiJam;
+                            $blockerSlots = $this->generateSlotsForDuration($blockerDurasi);
+                            $blockerRooms = $this->getRuanganCocok($blocker->mataKuliah, $daftarRuangan);
+
+                            $relocatedThis = false;
+                            foreach ($blockerSlots as $bSlot) {
+                                if ($relocatedThis) {
+                                    break;
+                                }
+                                foreach ($blockerRooms as $bRoom) {
+                                    $bCandidates = $conflictIndex->candidates($blocker->mataKuliah, $bSlot, $bRoom);
+                                    $bConflict = false;
+                                    foreach ($bCandidates as $bEx) {
+                                        if ($this->isConflict($blocker->mataKuliah, $bEx->mataKuliah, $bSlot, $bEx->slot, $bRoom, $bEx->ruangan)) {
+                                            $bConflict = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (! $bConflict && $this->isConflict($blocker->mataKuliah, $mk, $bSlot, $slot, $bRoom, $ruangan)) {
+                                        $bConflict = true;
+                                    }
+
+                                    if (! $bConflict) {
+                                        $blockerTeknisi = $blocker->mataKuliah->isWorkshop
+                                            ? $this->findTeknisi($bSlot, $daftarTeknisi, $conflictIndex)
+                                            : null;
+                                        $newB = new JadwalItem(
+                                            $blocker->mataKuliah,
+                                            $bRoom,
+                                            $bSlot,
+                                            $blocker->pertemuanKe,
+                                            $blockerTeknisi
+                                        );
+                                        $conflictIndex->add($newB);
+                                        $newBlockers[] = ['old' => $blocker, 'new' => $newB];
+                                        $relocatedThis = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (! $relocatedThis) {
+                                $allRelocated = false;
+                                break;
+                            }
+                        }
+
+                        if ($allRelocated) {
+                            foreach ($newBlockers as $nb) {
+                                $key = array_search($nb['old'], $jadwal, true);
+                                if ($key !== false) {
+                                    $jadwal[$key] = $nb['new'];
+                                } else {
+                                    $jadwal[] = $nb['new'];
+                                }
+                                $jadwalPerHari[$nb['new']->slot->hari->nama][] = $nb['new'];
+                            }
+
+                            $mkTeknisi = $mk->isWorkshop
+                                ? $this->findTeknisi($slot, $daftarTeknisi, $conflictIndex)
+                                : null;
+                            $newItem = new JadwalItem($mk, $ruangan, $slot, $pertemuanKe, $mkTeknisi);
+                            $jadwal[] = $newItem;
+                            $conflictIndex->add($newItem);
+                            $jadwalPerHari[$slot->hari->nama][] = $newItem;
+
+                            if ($pertemuanKe === 1 && $mk->isWorkshop) {
+                                $pertemuan1SlotMap[spl_object_id($mk)] = $slot;
+                            }
+
+                            return true;
+                        }
+
+                        foreach ($newBlockers as $nb) {
+                            $conflictIndex->remove($nb['new']);
+                        }
+                    }
+
+                    foreach ($conflictingItems as $b) {
+                        $conflictIndex->add($b);
+                        $jadwalPerHari[$b->slot->hari->nama][] = $b;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     // ─── Main Scheduling ─────────────────────────────────────────────────────
@@ -490,8 +676,7 @@ class WelchPowellAlgorithm
         array $daftarHari,
         array $daftarTeknisi = [],
         ?int $overrideDurasiWorkshop = null
-    ): array // [bool $isSuccess, JadwalItem[] $jadwal, UnscheduledItem[] $unscheduled]
-    {
+    ): array { // [bool $isSuccess, JadwalItem[] $jadwal, UnscheduledItem[] $unscheduled]
         $this->daftarMataKuliah = $daftarMataKuliah;
         $this->daftarHari = $daftarHari;
         $this->slotCache = [];
@@ -506,18 +691,33 @@ class WelchPowellAlgorithm
             }
         }
 
+        // Urutan penjadwalan: degree tertinggi dulu (paling banyak konflik),
+        // durasi terpanjang sebagai tiebreaker, lalu MK umum (teori) didahulukan
+        // di antara MK dengan durasi dan degree yang sama.
         usort($expandedMK, function (MKDegree $a, MKDegree $b) {
-            if ($b->mk->durasiJam !== $a->mk->durasiJam)
-                return $b->mk->durasiJam <=> $a->mk->durasiJam;
-            if ($b->degree !== $a->degree)
+            // Degree primer: yang paling banyak konflik dijadwalkan lebih dulu
+            if ($b->degree !== $a->degree) {
                 return $b->degree <=> $a->degree;
-            return ($b->mk->kelas === '' ? 1 : 0) <=> ($a->mk->kelas === '' ? 1 : 0);
+            }
+            // Tiebreak 1: durasi terpanjang (workshop 4j sebelum teori 2j jika degree sama)
+            if ($b->mk->durasiJam !== $a->mk->durasiJam) {
+                return $b->mk->durasiJam <=> $a->mk->durasiJam;
+            }
+            // Tiebreak 2: MK umum (kelas='') didahulukan karena paling terbatas slot-nya
+            $aIsUmum = $a->mk->kelas === '';
+            $bIsUmum = $b->mk->kelas === '';
+            if ($aIsUmum !== $bIsUmum) {
+                return $aIsUmum ? -1 : 1;
+            }
+
+            return 0;
         });
 
         $jadwal = [];
-        $conflictIndex = new ConflictIndex();
+        $conflictIndex = new ConflictIndex;
         $isSuccess = true;
         $unscheduledList = [];
+        $unscheduledMKDegrees = []; // untuk rescue pass setelah compaction
         $jadwalPerHari = [];
         $pertemuan1SlotMap = [];
 
@@ -541,13 +741,14 @@ class WelchPowellAlgorithm
                     'alasan' => "Tidak ada slot tersedia untuk durasi {$mk->durasiJam} jam",
                     'degree' => $degree,
                 ];
+
                 continue;
             }
 
             $pertemuan1Slot = ($pertemuanKe === 2) ? ($pertemuan1SlotMap[spl_object_id($mk)] ?? null) : null;
 
             $slotsWithPriority = array_map(
-                fn(Slot $slot) => new SlotPriority(
+                fn (Slot $slot) => new SlotPriority(
                     $slot,
                     $this->hitungPrioritasSlot($slot, $mk, $jadwalPerHari, $pertemuanKe, $pertemuan1Slot)
                 ),
@@ -557,10 +758,13 @@ class WelchPowellAlgorithm
             usort($slotsWithPriority, function (SlotPriority $a, SlotPriority $b) {
                 $hariA = array_search($a->slot->hari->nama, array_column($this->daftarHari, 'nama'));
                 $hariB = array_search($b->slot->hari->nama, array_column($this->daftarHari, 'nama'));
-                if ($hariA !== $hariB)
+                if ($hariA !== $hariB) {
                     return $hariA <=> $hariB;
-                if ($a->slot->jamMulai !== $b->slot->jamMulai)
+                }
+                if ($a->slot->jamMulai !== $b->slot->jamMulai) {
                     return $a->slot->jamMulai <=> $b->slot->jamMulai;
+                }
+
                 return $b->priority <=> $a->priority;
             });
 
@@ -568,8 +772,9 @@ class WelchPowellAlgorithm
             $berhasil = false;
 
             foreach ($slotsWithPriority as $sp) {
-                if ($berhasil)
+                if ($berhasil) {
                     break;
+                }
                 foreach ($ruanganCocok as $ruangan) {
                     $candidates = $conflictIndex->candidates($mk, $sp->slot, $ruangan);
                     $adaKonflik = false;
@@ -580,7 +785,7 @@ class WelchPowellAlgorithm
                         }
                     }
 
-                    if (!$adaKonflik) {
+                    if (! $adaKonflik) {
                         $teknisi = $mk->isWorkshop
                             ? $this->findTeknisi($sp->slot, $daftarTeknisi, $conflictIndex)
                             : null;
@@ -600,7 +805,7 @@ class WelchPowellAlgorithm
                 }
             }
 
-            if (!$berhasil) {
+            if (! $berhasil) {
                 $isSuccess = false;
                 $unscheduledList[] = [
                     'nama_mk' => $mk->getNamaLengkap(),
@@ -611,6 +816,7 @@ class WelchPowellAlgorithm
                     'alasan' => 'Konflik tidak dapat diselesaikan (dosen/ruangan/semester)',
                     'degree' => $degree,
                 ];
+                $unscheduledMKDegrees[] = $mkDegree; // simpan referensi untuk rescue pass
             }
         }
 
@@ -626,16 +832,18 @@ class WelchPowellAlgorithm
             usort($snapshot, function (JadwalItem $a, JadwalItem $b) {
                 $hariA = array_search($a->slot->hari->nama, array_column($this->daftarHari, 'nama'));
                 $hariB = array_search($b->slot->hari->nama, array_column($this->daftarHari, 'nama'));
-                if ($hariA !== $hariB)
+                if ($hariA !== $hariB) {
                     return $hariB <=> $hariA;
+                }
+
                 return $b->slot->jamMulai <=> $a->slot->jamMulai;
             });
 
             foreach ($snapshot as $item) {
-                $jadwal = array_values(array_filter($jadwal, fn($i) => $i !== $item));
+                $jadwal = array_values(array_filter($jadwal, fn ($i) => $i !== $item));
                 $conflictIndex->remove($item);
                 $jadwalPerHari[$item->slot->hari->nama] = array_values(
-                    array_filter($jadwalPerHari[$item->slot->hari->nama] ?? [], fn($i) => $i !== $item)
+                    array_filter($jadwalPerHari[$item->slot->hari->nama] ?? [], fn ($i) => $i !== $item)
                 );
 
                 $durasi = $item->slot->jamSelesai - $item->slot->jamMulai;
@@ -643,24 +851,26 @@ class WelchPowellAlgorithm
                 $ruanganCocok = $this->getRuanganCocok($item->mataKuliah, $daftarRuangan);
 
                 $slotBaru = null;
-                $hariNames = array_map(fn($h) => $h->nama, $this->daftarHari);
+                $hariNames = array_map(fn ($h) => $h->nama, $this->daftarHari);
                 $currHariIdx = array_search($item->slot->hari->nama, $hariNames);
 
                 foreach ($available as $kandidatSlot) {
                     $candHariIdx = array_search($kandidatSlot->hari->nama, $hariNames);
-                    if ($candHariIdx > $currHariIdx)
+                    if ($candHariIdx > $currHariIdx) {
                         continue;
-                    if ($candHariIdx === $currHariIdx && $kandidatSlot->jamMulai >= $item->slot->jamMulai)
+                    }
+                    if ($candHariIdx === $currHariIdx && $kandidatSlot->jamMulai >= $item->slot->jamMulai) {
                         continue;
+                    }
 
                     if ($item->mataKuliah->pertemuanPerMinggu > 1) {
                         $hariSama = array_filter(
                             $jadwal,
-                            fn($i) =>
-                            $i->mataKuliah === $item->mataKuliah && $i->slot->hari === $kandidatSlot->hari
+                            fn ($i) => $i->mataKuliah === $item->mataKuliah && $i->slot->hari === $kandidatSlot->hari
                         );
-                        if (!empty($hariSama))
+                        if (! empty($hariSama)) {
                             continue;
+                        }
                     }
 
                     foreach ($ruanganCocok as $kandidatRuangan) {
@@ -672,7 +882,7 @@ class WelchPowellAlgorithm
                                 break;
                             }
                         }
-                        if (!$adaKonflikBaru) {
+                        if (! $adaKonflikBaru) {
                             $teknisi = $item->mataKuliah->isWorkshop
                                 ? $this->findTeknisi($kandidatSlot, $daftarTeknisi, $conflictIndex)
                                 : null;
@@ -683,8 +893,9 @@ class WelchPowellAlgorithm
                 }
 
                 $targetItem = $slotBaru ?? $item;
-                if ($slotBaru !== null)
+                if ($slotBaru !== null) {
                     $adaPerubahan = true;
+                }
 
                 $jadwal[] = $targetItem;
                 $conflictIndex->add($targetItem);
@@ -692,13 +903,108 @@ class WelchPowellAlgorithm
             }
         }
 
+        // ─── Rescue Pass ──────────────────────────────────────────────────────
+        // Setelah compaction, coba jadwalkan ulang item yang masih gagal secara iteratif.
+        if (! empty($unscheduledMKDegrees)) {
+            $changedRescue = true;
+            $rescueLoop = 0;
+
+            while ($changedRescue && $rescueLoop < 3 && ! empty($unscheduledMKDegrees)) {
+                $changedRescue = false;
+                $rescueLoop++;
+                $newUnscheduledList = [];
+                $newUnscheduledMKDegrees = [];
+
+                foreach ($unscheduledMKDegrees as $idx => $mkDegRes) {
+                    [$mkRes, $pertemuanKeRes] = [$mkDegRes->mk, $mkDegRes->pertemuan];
+
+                    $durasiRes = ($mkRes->isWorkshop && $overrideDurasiWorkshop !== null)
+                        ? $overrideDurasiWorkshop
+                        : $mkRes->durasiJam;
+
+                    $availableSlotsRes = $this->generateSlotsForDuration($durasiRes);
+                    $ruanganCocokRes = $this->getRuanganCocok($mkRes, $daftarRuangan);
+                    $berhasilRes = false;
+
+                    foreach ($availableSlotsRes as $slotRes) {
+                        if ($berhasilRes) {
+                            break;
+                        }
+                        foreach ($ruanganCocokRes as $ruanganRes) {
+                            $candidatesRes = $conflictIndex->candidates($mkRes, $slotRes, $ruanganRes);
+                            $adaKonflikRes = false;
+                            foreach ($candidatesRes as $existingRes) {
+                                if ($this->isConflict(
+                                    $mkRes, $existingRes->mataKuliah,
+                                    $slotRes, $existingRes->slot,
+                                    $ruanganRes, $existingRes->ruangan
+                                )) {
+                                    $adaKonflikRes = true;
+                                    break;
+                                }
+                            }
+
+                            if (! $adaKonflikRes) {
+                                $teknisiRes = $mkRes->isWorkshop
+                                    ? $this->findTeknisi($slotRes, $daftarTeknisi, $conflictIndex)
+                                    : null;
+
+                                $newItemRes = new JadwalItem($mkRes, $ruanganRes, $slotRes, $pertemuanKeRes, $teknisiRes);
+                                $jadwal[] = $newItemRes;
+                                $conflictIndex->add($newItemRes);
+                                $jadwalPerHari[$slotRes->hari->nama][] = $newItemRes;
+
+                                if ($pertemuanKeRes === 1 && $mkRes->isWorkshop) {
+                                    $pertemuan1SlotMap[spl_object_id($mkRes)] = $slotRes;
+                                }
+
+                                $berhasilRes = true;
+                                $changedRescue = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (! $berhasilRes) {
+                        $berhasilRes = $this->tryDisplacementRescue(
+                            $mkDegRes,
+                            $jadwal,
+                            $conflictIndex,
+                            $jadwalPerHari,
+                            $pertemuan1SlotMap,
+                            $daftarRuangan,
+                            $daftarTeknisi,
+                            $overrideDurasiWorkshop
+                        );
+                        if ($berhasilRes) {
+                            $changedRescue = true;
+                        }
+                    }
+
+                    if (! $berhasilRes) {
+                        $newUnscheduledList[] = $unscheduledList[$idx];
+                        $newUnscheduledMKDegrees[] = $mkDegRes;
+                    }
+                }
+
+                $unscheduledList = $newUnscheduledList;
+                $unscheduledMKDegrees = $newUnscheduledMKDegrees;
+            }
+
+            if (empty($unscheduledList)) {
+                $isSuccess = true;
+            }
+        }
+
         // Sort final
-        $hariNames = array_map(fn($h) => $h->nama, $this->daftarHari);
+        $hariNames = array_map(fn ($h) => $h->nama, $this->daftarHari);
         usort($jadwal, function (JadwalItem $a, JadwalItem $b) use ($hariNames) {
             $hariA = array_search($a->slot->hari->nama, $hariNames);
             $hariB = array_search($b->slot->hari->nama, $hariNames);
-            if ($hariA !== $hariB)
+            if ($hariA !== $hariB) {
                 return $hariA <=> $hariB;
+            }
+
             return $a->slot->jamMulai <=> $b->slot->jamMulai;
         });
 
@@ -716,7 +1022,7 @@ class WelchPowellAlgorithm
         array $referensiRombel,
         array $unscheduledItems = []
     ): array {
-        $jadwalData = array_map(fn(JadwalItem $item) => [
+        $jadwalData = array_map(fn (JadwalItem $item) => [
             'namaJadwal' => $item->getNamaLengkap(),
             'hari' => $item->slot->hari->nama,
             'jamMulai' => $item->slot->jamMulai,
@@ -738,8 +1044,7 @@ class WelchPowellAlgorithm
         foreach ($byRuangan as $ruangan => $items) {
             usort(
                 $items,
-                fn($a, $b) =>
-                (self::HARI_ORDER[strtolower($a['hari'])] ?? 99) <=> (self::HARI_ORDER[strtolower($b['hari'])] ?? 99)
+                fn ($a, $b) => (self::HARI_ORDER[strtolower($a['hari'])] ?? 99) <=> (self::HARI_ORDER[strtolower($b['hari'])] ?? 99)
                 ?: $a['jamMulai'] <=> $b['jamMulai']
             );
             $groupedByRuangan[] = ['nama' => $ruangan, 'items' => $items];
@@ -756,8 +1061,7 @@ class WelchPowellAlgorithm
         }
         usort(
             $groupedByHari,
-            fn($a, $b) =>
-            (self::HARI_ORDER[strtolower($a['nama'])] ?? 99) <=> (self::HARI_ORDER[strtolower($b['nama'])] ?? 99)
+            fn ($a, $b) => (self::HARI_ORDER[strtolower($a['nama'])] ?? 99) <=> (self::HARI_ORDER[strtolower($b['nama'])] ?? 99)
         );
 
         $dosenPerKode = [];
@@ -781,11 +1085,14 @@ class WelchPowellAlgorithm
         }
 
         $jumlahRombelSemester = function ($semester) use ($kelasPerSemesterCount) {
-            if (($kelasPerSemesterCount[$semester] ?? 0) > 0)
+            if (($kelasPerSemesterCount[$semester] ?? 0) > 0) {
                 return $kelasPerSemesterCount[$semester];
+            }
             $pasangan = ($semester % 2 == 0) ? $semester - 1 : $semester + 1;
-            if (($kelasPerSemesterCount[$pasangan] ?? 0) > 0)
+            if (($kelasPerSemesterCount[$pasangan] ?? 0) > 0) {
                 return $kelasPerSemesterCount[$pasangan];
+            }
+
             return 1;
         };
 
@@ -860,7 +1167,7 @@ class WelchPowellAlgorithm
             ];
         }
 
-        usort($dosenSummary, fn($a, $b) => strcmp($a['nama_dosen'], $b['nama_dosen']));
+        usort($dosenSummary, fn ($a, $b) => strcmp($a['nama_dosen'], $b['nama_dosen']));
 
         $teknisiItems = [];
         foreach ($jadwal as $item) {
@@ -893,7 +1200,7 @@ class WelchPowellAlgorithm
             ];
         }
 
-        usort($teknisiSummary, fn($a, $b) => strcmp($a['nama_teknisi'], $b['nama_teknisi']));
+        usort($teknisiSummary, fn ($a, $b) => strcmp($a['nama_teknisi'], $b['nama_teknisi']));
 
         return [
             'title' => $title,
