@@ -25,6 +25,13 @@
                 </div>
             </div>
 
+            @if(session('success'))
+            <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3 shadow-xs">
+                <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+                <div class="text-sm font-semibold">{{ session('success') }}</div>
+            </div>
+            @endif
+
             <!-- Table Container -->
             <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                 <!-- Table Controls -->
@@ -40,7 +47,7 @@
                         </button>
                     </div>
                     <div class="flex items-center gap-4 text-sm text-slate-500">
-                        <span>Menampilkan 4 dari 12 jadwal</span>
+                        <span>Menampilkan {{ $jadwals->firstItem() ?? 0 }} - {{ $jadwals->lastItem() ?? 0 }} dari {{ $jadwals->total() }} jadwal</span>
                     </div>
                 </div>
 
@@ -72,18 +79,18 @@
                                 <td class="px-6 py-4 text-sm text-slate-600">{{ $j->created_at->format('d M Y') }}</td>
                                 <td class="px-6 py-4 text-center">
                                     @if($j->is_success)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Berhasil</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">100% Berhasil</span>
+                                    @elseif(($j->unscheduled_count ?? 0) > 0)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800" title="{{ $j->unscheduled_count }} sesi belum dapat slot">Parsial ({{ $j->unscheduled_count }} Belum)</span>
                                     @else
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Gagal</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    @if($j->is_success)
                                     <a href="{{ route('jadwal.show', $j->id) }}" class="px-3 py-1.5 bg-white border border-slate-200 text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1">
                                         <span class="material-symbols-outlined text-sm">visibility</span>
                                         DETAIL
                                     </a>
-                                    @endif
                                 </td>
                             </tr>
                             @empty

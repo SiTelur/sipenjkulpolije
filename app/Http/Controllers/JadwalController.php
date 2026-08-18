@@ -16,7 +16,7 @@ class JadwalController extends Controller
 {
     public function index()
     {
-        $jadwals = Jadwal::orderBy('created_at', 'desc')->paginate(10);
+        $jadwals = Jadwal::orderBy('id', 'desc')->paginate(10);
         return view('jadwal.list', compact('jadwals'));
     }
 
